@@ -19,6 +19,16 @@ describe('styleLint', () => {
     expect(violations.some((v) => v.includes('emoji'))).toBe(true)
   })
 
+  it('catches flag emoji', () => {
+    const violations = styleLint('Proud to be based in \u{1F1F3}\u{1F1EC}.')
+    expect(violations.some((v) => v.includes('emoji'))).toBe(true)
+  })
+
+  it('catches keycap emoji', () => {
+    const violations = styleLint('Ranked \u{31}\u{FE0F}\u{20E3} in my cohort.')
+    expect(violations.some((v) => v.includes('emoji'))).toBe(true)
+  })
+
   it('catches banned phrases case-insensitively', () => {
     const violations = styleLint('I am THRILLED to Leverage my skills and delve into this role.')
     expect(violations).toContainEqual(expect.stringContaining('i am thrilled'))

@@ -29,7 +29,7 @@ const BANNED_CHARS: [RegExp, string][] = [
   [/–/g, 'en-dash'],
 ]
 
-const EMOJI = /\p{Extended_Pictographic}/gu
+const EMOJI = /[\p{Extended_Pictographic}\p{Regional_Indicator}]|[#*0-9]️?⃣/gu
 
 export function styleLint(text: string): string[] {
   const violations: string[] = []
