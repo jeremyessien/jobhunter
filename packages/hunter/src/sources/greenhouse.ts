@@ -42,7 +42,8 @@ export const greenhouseAdapter: SourceAdapter = {
           sql: "UPDATE companies SET last_seen=datetime('now') WHERE ats='greenhouse' AND slug=?",
           args: [slug],
         })
-      } catch {
+      } catch (err) {
+        console.error(`greenhouse ${slug} failed: ${String(err)}`)
         continue
       }
     }

@@ -61,9 +61,13 @@ export async function runJudge(db: Client, config: Config, profile: Profile, inv
         sql: 'UPDATE jobs SET status=?, score=?, score_json=? WHERE id=?',
         args: [status, result.score, JSON.stringify(result), row.id],
       })
-    } catch {
+    } catch (err) {
       failed++
-      await db.execute({ sql: "UPDATE jobs SET status='score_failed' WHERE id=?", args: [row.id] })
+      console.error(`judge failed for ${row.company} - ${row.title}: ${String(err)}`)
+      await db.execute({
+        sql: "UPDATE jobs SET status='score_failed', score_json=? WHERE id=?",
+        args: [JSON.stringify({ error: String(err) }), row.id],
+      })
     }
   }
   return { scored, queued, failed }

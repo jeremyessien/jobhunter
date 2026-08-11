@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -36,6 +36,7 @@ describe('greenhouseAdapter', () => {
   it('continues past a failing company', async () => {
     const db = await openDb('file:' + join(mkdtempSync(join(tmpdir(), 'jh-')), 't.db'))
     await db.execute("INSERT INTO companies(ats, slug) VALUES ('greenhouse','dead'), ('greenhouse','acme')")
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const jobs = await greenhouseAdapter.fetchJobs({
       db, config,
       fetchJson: async (url) => {
@@ -44,5 +45,8 @@ describe('greenhouseAdapter', () => {
       },
     })
     expect(jobs).toHaveLength(2)
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('dead'))
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('404'))
+    errorSpy.mockRestore()
   })
 })
