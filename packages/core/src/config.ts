@@ -13,6 +13,7 @@ export const configSchema = z.object({
   dbAuthToken: z.string().optional(),
   claudeBin: z.string().default('claude'),
   scoreCapPerHunt: z.number().int().positive().default(30),
+  draftCapPerHunt: z.number().int().positive().default(10),
   queueThreshold: z.number().int().min(1).max(10).default(7),
   companyCooldownDays: z.number().int().positive().default(14),
   blocklist: z.array(z.string()).default([]),

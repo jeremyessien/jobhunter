@@ -22,6 +22,7 @@ describe('loadConfig', () => {
     expect(config.scoreCapPerHunt).toBe(30)
     expect(config.queueThreshold).toBe(7)
     expect(config.companyCooldownDays).toBe(14)
+    expect(config.draftCapPerHunt).toBe(10)
     expect(config.lanes[0].seniorityPatterns).toContain('senior')
     expect(config.visaPatterns.length).toBeGreaterThan(0)
   })
