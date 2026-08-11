@@ -56,8 +56,10 @@ export async function openDb(url: string, authToken?: string): Promise<Client> {
   const rs = await db.execute('SELECT MAX(v) AS v FROM schema_version')
   const current = (rs.rows[0]?.v as number | null) ?? 0
   for (let i = current; i < MIGRATIONS.length; i++) {
-    await db.execute(MIGRATIONS[i])
-    await db.execute({ sql: 'INSERT INTO schema_version(v) VALUES (?)', args: [i + 1] })
+    await db.batch(
+      [MIGRATIONS[i], { sql: 'INSERT INTO schema_version(v) VALUES (?)', args: [i + 1] }],
+      'write',
+    )
   }
   return db
 }
