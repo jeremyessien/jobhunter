@@ -1,0 +1,20 @@
+{
+  "jobs": [
+    {
+      "id": 4011002,
+      "title": "Senior Flutter Engineer",
+      "updated_at": "2026-08-01T12:00:00-04:00",
+      "location": { "name": "Remote" },
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/4011002",
+      "content": "&lt;p&gt;Build our mobile app with &lt;strong&gt;Flutter&lt;/strong&gt;.&lt;/p&gt;"
+    },
+    {
+      "id": 4011003,
+      "title": "Staff Accountant",
+      "updated_at": "2026-08-02T12:00:00-04:00",
+      "location": { "name": "New York, NY" },
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/4011003",
+      "content": "&lt;p&gt;Numbers.&lt;/p&gt;"
+    }
+  ]
+}
