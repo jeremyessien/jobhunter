@@ -1,0 +1,10 @@
+{
+  "name": "@jobhunter/hunter",
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@jobhunter/core": "workspace:*",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": { "@types/node": "^22.0.0" }
+}
