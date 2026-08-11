@@ -17,11 +17,13 @@ describe('listQueue', () => {
     await insert('a:1', 'Senior Flutter Engineer', 8, 'queued')
     await insert('a:2', 'Senior Mobile Engineer', 9, 'queued')
     await insert('a:3', 'Senior React Engineer', 9, 'scored')
+    await db.execute("UPDATE jobs SET draft_flag='drafted' WHERE external_key='a:2'")
+    await db.execute("UPDATE jobs SET draft_flag='manual' WHERE external_key='a:1'")
 
     const lines = await listQueue(db)
     expect(lines).toHaveLength(2)
-    expect(lines[0]).toBe('[9/10] Senior Mobile Engineer — Acme (remote-mobile) https://x/a:2')
-    expect(lines[1]).toBe('[8/10] Senior Flutter Engineer — Acme (remote-mobile) https://x/a:1')
+    expect(lines[0]).toBe('[9/10] Senior Mobile Engineer — Acme (remote-mobile) https://x/a:2 [draft ready]')
+    expect(lines[1]).toBe('[8/10] Senior Flutter Engineer — Acme (remote-mobile) https://x/a:1 [write manually]')
   })
 
   it('returns an empty list when nothing is queued', async () => {

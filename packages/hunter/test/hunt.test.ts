@@ -21,9 +21,11 @@ const badAdapter: SourceAdapter = {
   name: 'bad',
   fetchJobs: async () => { throw new Error('API changed') },
 }
-const invoke = (async () => ({
-  score: 8, matched_strengths: [{ claim: 'c', evidence: 'e' }], gaps: [], verdict: 'v',
-})) as InvokeClaude
+const invoke = (async (opts: { prompt: string }) =>
+  opts.prompt.includes('cover_letter')
+    ? { cover_letter: 'I build Flutter apps for banks and want this one.', answers: [] }
+    : { score: 8, matched_strengths: [{ claim: 'c', evidence: 'e' }], gaps: [], verdict: 'v' }
+) as InvokeClaude
 
 describe('hunt', () => {
   it('runs adapters in isolation, records runs, filters, and judges', async () => {
@@ -40,6 +42,9 @@ describe('hunt', () => {
     ])
     expect(result.filter).toEqual({ matched: 1, filteredOut: 0 })
     expect(result.judge).toEqual({ scored: 1, queued: 1, failed: 0 })
+    expect(result.draft).toEqual({ drafted: 1, manual: 0, deferred: 0 })
+    const drafted = await db.execute("SELECT draft_flag FROM jobs WHERE status='queued'")
+    expect(drafted.rows[0].draft_flag).toBe('drafted')
 
     const runs = await db.execute('SELECT source, ok, error FROM runs ORDER BY id')
     expect(runs.rows[0].ok).toBe(1)
@@ -51,6 +56,7 @@ describe('hunt', () => {
     const db = await openDb('file:' + join(mkdtempSync(join(tmpdir(), 'jh-')), 't.db'))
     const result = await hunt({ db, config, adapters: [goodAdapter], invoke, fetchJson: async () => ({}), now: NOW })
     expect(result.judge).toBeNull()
+    expect(result.draft).toBeNull()
     const rs = await db.execute('SELECT status FROM jobs')
     expect(rs.rows[0].status).toBe('matched')
   })

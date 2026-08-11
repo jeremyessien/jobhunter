@@ -4,6 +4,7 @@ import type { SourceAdapter } from './sources/types.js'
 import { ingestJobs } from './pipeline/ingest.js'
 import { runFilter } from './pipeline/filter.js'
 import { runJudge } from './pipeline/judge.js'
+import { runDrafter } from './pipeline/drafter.js'
 import { getProfile } from './profile.js'
 
 export async function hunt(deps: {
@@ -43,5 +44,6 @@ export async function hunt(deps: {
   const filter = await runFilter(db, config)
   const profile = await getProfile(db)
   const judge = profile ? await runJudge(db, config, profile, invoke, now) : null
-  return { runs, filter, judge }
+  const draft = profile ? await runDrafter({ db, config, profile, invoke, fetchJson }) : null
+  return { runs, filter, judge, draft }
 }

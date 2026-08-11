@@ -3,9 +3,10 @@ import { hunt } from './hunt.js'
 import { greenhouseAdapter } from './sources/greenhouse.js'
 import { remotiveAdapter } from './sources/remotive.js'
 import { makeThrottledFetch } from './net.js'
-import { parseResume } from './profile.js'
+import { parseResume, getProfile } from './profile.js'
 import { seedCompanies } from './seed.js'
 import { listQueue } from './queue.js'
+import { runDrafter } from './pipeline/drafter.js'
 
 const [command, arg] = process.argv.slice(2)
 
@@ -25,6 +26,7 @@ switch (command) {
     for (const r of result.runs) console.log(`${r.ok ? 'ok ' : 'ERR'} ${r.source}: ${r.jobsFound} jobs`)
     console.log(`filter: ${result.filter.matched} matched, ${result.filter.filteredOut} out`)
     console.log(result.judge ? `judge: ${result.judge.scored} scored, ${result.judge.queued} queued, ${result.judge.failed} failed` : 'judge skipped: run parse-resume first')
+    console.log(result.draft ? `draft: ${result.draft.drafted} drafted, ${result.draft.manual} manual, ${result.draft.deferred} deferred` : 'draft skipped: run parse-resume first')
     break
   }
   case 'parse-resume': {
@@ -42,6 +44,13 @@ switch (command) {
     for (const line of await listQueue(db)) console.log(line)
     break
   }
+  case 'draft': {
+    const profile = await getProfile(db)
+    if (!profile) throw new Error('no profile stored: run parse-resume first')
+    const res = await runDrafter({ db, config, profile, invoke: invokeClaude, fetchJson: makeThrottledFetch() })
+    console.log(`draft: ${res.drafted} drafted, ${res.manual} manual, ${res.deferred} deferred`)
+    break
+  }
   default:
-    console.log('usage: jobhunter <hunt|parse-resume|seed-companies|queue>')
+    console.log('usage: jobhunter <hunt|parse-resume|seed-companies|queue|draft>')
 }
