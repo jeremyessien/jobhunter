@@ -73,4 +73,44 @@ describe('ingestJobs', () => {
     expect(rs.rows[0].n).toBe(1)
     expect(rs.rows[0].source).toBe('greenhouse')
   })
+
+  it('keeps two direct-ATS jobs with the same company+title as distinct rows', async () => {
+    const db = await tmpDb()
+    const res1 = await ingestJobs(db, [base], NOW)
+    expect(res1).toEqual({ inserted: 1, updated: 0, skipped: 0 })
+    const otherReq: RawJob = { ...base, externalId: '456', applyUrl: 'https://boards.greenhouse.io/acme/jobs/456' }
+    const res2 = await ingestJobs(db, [otherReq], NOW)
+    expect(res2).toEqual({ inserted: 1, updated: 0, skipped: 0 })
+    const rs = await db.execute('SELECT COUNT(*) AS n FROM jobs')
+    expect(rs.rows[0].n).toBe(2)
+  })
+
+  it('keeps two aggregator jobs with the same company+title as distinct rows', async () => {
+    const db = await tmpDb()
+    const aggregatorA: RawJob = { ...base, externalId: 'r1', source: 'remotive', atsFamily: undefined, applyUrl: 'https://remotive.com/j/1' }
+    const aggregatorB: RawJob = { ...base, externalId: 'r2', source: 'remotive', atsFamily: undefined, applyUrl: 'https://remotive.com/j/2' }
+    await ingestJobs(db, [aggregatorA], NOW)
+    const res = await ingestJobs(db, [aggregatorB], NOW)
+    expect(res).toEqual({ inserted: 1, updated: 0, skipped: 0 })
+    const rs = await db.execute('SELECT COUNT(*) AS n FROM jobs')
+    expect(rs.rows[0].n).toBe(2)
+  })
+
+  it('refreshes company and title casing when upgrading an aggregator duplicate', async () => {
+    const db = await tmpDb()
+    const aggregator: RawJob = {
+      ...base,
+      externalId: 'r9',
+      source: 'remotive',
+      atsFamily: undefined,
+      applyUrl: 'https://remotive.com/j/9',
+      company: 'acme',
+      title: 'senior flutter engineer',
+    }
+    await ingestJobs(db, [aggregator], NOW)
+    await ingestJobs(db, [base], NOW)
+    const rs = await db.execute('SELECT company, title FROM jobs')
+    expect(rs.rows[0].company).toBe('Acme')
+    expect(rs.rows[0].title).toBe('Senior Flutter Engineer')
+  })
 })

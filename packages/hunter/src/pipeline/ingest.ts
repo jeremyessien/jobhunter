@@ -38,14 +38,16 @@ export async function ingestJobs(db: Client, raws: RawJob[], now: string) {
       const existing = dupe.rows[0]
       if (!existing.ats_family && raw.atsFamily) {
         await db.execute({
-          sql: 'UPDATE jobs SET external_key=?, source=?, ats_family=?, apply_url=?, description=?, updated_at=? WHERE id=?',
-          args: [key, raw.source, raw.atsFamily, raw.applyUrl, desc, now, existing.id],
+          sql: 'UPDATE jobs SET external_key=?, title=?, company=?, source=?, ats_family=?, apply_url=?, description=?, updated_at=? WHERE id=?',
+          args: [key, title, company, raw.source, raw.atsFamily, raw.applyUrl, desc, now, existing.id],
         })
         updated++
-      } else {
-        skipped++
+        continue
       }
-      continue
+      if (existing.ats_family && !raw.atsFamily) {
+        skipped++
+        continue
+      }
     }
     await db.execute({
       sql: `INSERT INTO jobs(external_key, title, company, location, remote, salary, description, apply_url, source, ats_family, posted_at, first_seen)
