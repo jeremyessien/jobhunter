@@ -1,0 +1,10 @@
+{
+  "id": 4011002,
+  "title": "Senior Flutter Engineer",
+  "questions": [
+    { "label": "Resume/CV", "required": true, "fields": [{ "type": "input_file" }] },
+    { "label": "Why do you want to work at Acme?", "required": true, "fields": [{ "type": "textarea" }] },
+    { "label": "Do you now or will you in the future require visa sponsorship?", "required": true, "fields": [{ "type": "multi_value_single_select" }] },
+    { "label": "Cover Letter", "required": false, "fields": [{ "type": "input_file" }] }
+  ]
+}
