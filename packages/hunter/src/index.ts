@@ -1,6 +1,7 @@
 export * from './types.js'
 export * from './pipeline/ingest.js'
 export * from './pipeline/filter.js'
+export * from './pipeline/judge.js'
 export * from './profile.js'
 export * from './sources/types.js'
 export * from './sources/greenhouse.js'
