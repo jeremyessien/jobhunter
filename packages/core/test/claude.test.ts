@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { z } from 'zod'
@@ -48,5 +48,28 @@ describe('invokeClaude', () => {
     await expect(
       invokeClaude({ prompt: 'p', model: 'haiku', schema, claudeBin: BIN }),
     ).rejects.toThrow(ClaudeInvocationError)
+  })
+
+  it('ignores braces in trailing prose and succeeds on the first attempt', async () => {
+    setOutput('FAKE_CLAUDE_OUTPUT', envelope('{"score": 5}\n\nNote: fields {score} explained above.'))
+    const out = await invokeClaude({ prompt: 'p', model: 'haiku', schema, claudeBin: BIN })
+    expect(out).toEqual({ score: 5 })
+    expect(readFileSync(process.env.FAKE_CLAUDE_COUNTER!, 'utf8').trim()).toBe('1')
+  })
+
+  it('skips a non-JSON brace block preceding the real JSON', async () => {
+    setOutput('FAKE_CLAUDE_OUTPUT', envelope('Sets look like {a, b}. Answer: {"score": 4}'))
+    const out = await invokeClaude({ prompt: 'p', model: 'haiku', schema, claudeBin: BIN })
+    expect(out).toEqual({ score: 4 })
+    expect(readFileSync(process.env.FAKE_CLAUDE_COUNTER!, 'utf8').trim()).toBe('1')
+  })
+
+  it('does not miscount braces inside JSON string values', async () => {
+    setOutput(
+      'FAKE_CLAUDE_OUTPUT',
+      envelope('Answer: {"score": 3, "verdict": "uses {braces} internally"} Done.'),
+    )
+    const out = await invokeClaude({ prompt: 'p', model: 'haiku', schema, claudeBin: BIN })
+    expect(out).toEqual({ score: 3 })
   })
 })
