@@ -14,26 +14,25 @@ export function stripHtml(html: string): string {
     .trim()
 }
 
-const dupeKey = (r: { company: string; title: string }) =>
-  `${r.company.toLowerCase().trim()}|${r.title.toLowerCase().trim()}`
-
 export async function ingestJobs(db: Client, raws: RawJob[], now: string) {
   let inserted = 0, updated = 0, skipped = 0
   for (const raw of raws) {
     const key = `${raw.source}:${raw.externalId}`
     const desc = stripHtml(raw.description)
+    const title = raw.title.trim()
+    const company = raw.company.trim()
     const byKey = await db.execute({ sql: 'SELECT id FROM jobs WHERE external_key = ?', args: [key] })
     if (byKey.rows.length > 0) {
       await db.execute({
         sql: 'UPDATE jobs SET title=?, location=?, remote=?, salary=?, description=?, apply_url=?, updated_at=? WHERE external_key=?',
-        args: [raw.title, raw.location ?? null, raw.remote ? 1 : 0, raw.salary ?? null, desc, raw.applyUrl, now, key],
+        args: [title, raw.location ?? null, raw.remote ? 1 : 0, raw.salary ?? null, desc, raw.applyUrl, now, key],
       })
       updated++
       continue
     }
     const dupe = await db.execute({
       sql: 'SELECT id, ats_family FROM jobs WHERE lower(company)=? AND lower(title)=?',
-      args: [raw.company.toLowerCase().trim(), raw.title.toLowerCase().trim()],
+      args: [company.toLowerCase(), title.toLowerCase()],
     })
     if (dupe.rows.length > 0) {
       const existing = dupe.rows[0]
@@ -51,7 +50,7 @@ export async function ingestJobs(db: Client, raws: RawJob[], now: string) {
     await db.execute({
       sql: `INSERT INTO jobs(external_key, title, company, location, remote, salary, description, apply_url, source, ats_family, posted_at, first_seen)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-      args: [key, raw.title, raw.company, raw.location ?? null, raw.remote ? 1 : 0, raw.salary ?? null, desc, raw.applyUrl, raw.source, raw.atsFamily ?? null, raw.postedAt ?? null, now],
+      args: [key, title, company, raw.location ?? null, raw.remote ? 1 : 0, raw.salary ?? null, desc, raw.applyUrl, raw.source, raw.atsFamily ?? null, raw.postedAt ?? null, now],
     })
     inserted++
   }

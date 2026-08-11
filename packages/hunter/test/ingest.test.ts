@@ -62,4 +62,15 @@ describe('ingestJobs', () => {
     const res = await ingestJobs(db, [aggregator], NOW)
     expect(res.skipped).toBe(1)
   })
+
+  it('normalizes whitespace in title and company for consistent deduping', async () => {
+    const db = await tmpDb()
+    const withWhitespace: RawJob = { ...base, externalId: 'r9', source: 'remotive', title: '  Senior Flutter Engineer  ', company: '  Acme  ', atsFamily: undefined, applyUrl: 'https://remotive.com/j/9' }
+    await ingestJobs(db, [withWhitespace], NOW)
+    const res = await ingestJobs(db, [base], NOW)
+    expect(res.updated).toBe(1)
+    const rs = await db.execute('SELECT source, COUNT(*) OVER () AS n FROM jobs')
+    expect(rs.rows[0].n).toBe(1)
+    expect(rs.rows[0].source).toBe('greenhouse')
+  })
 })
