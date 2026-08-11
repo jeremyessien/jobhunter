@@ -43,4 +43,13 @@ describe('factLock', () => {
   it('passes drafts with no numbers at all', () => {
     expect(factLock('I build reliable mobile apps for banks.', sources)).toEqual([])
   })
+
+  it('catches a fabricated leading-dot decimal instead of colliding with a bare digit', () => {
+    const violations = factLock('I shaved .5 seconds off cold start times.', sources)
+    expect(violations).toEqual([expect.stringContaining('0.5')])
+  })
+
+  it('treats a leading-dot decimal as equal to its zero-prefixed form', () => {
+    expect(factLock('I shaved .5 seconds off cold start times.', ['Baseline latency was 0.5s.'])).toEqual([])
+  })
 })
