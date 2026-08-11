@@ -15,7 +15,7 @@ Runs at strictly $0 beyond what he already pays (Claude subscription).
 - **Search lanes (all four):**
   1. Remote-worldwide senior Flutter/mobile
   2. Senior frontend/full-stack (React/Next.js)
-  3. On-site roles with visa sponsorship (EU/UK/US/Middle East)
+  3. On-site roles with visa sponsorship — anywhere in the world
   4. Nigeria/Africa local market
 - **Automation level:** assisted apply — the tool does everything except the final submit click. No unattended submission in v1 (see Research constraints).
 - **Deployment:** cloud-split from day one. Hunts and dashboard work with the Mac closed; only the apply step requires the Mac.
@@ -88,13 +88,15 @@ One interface: `fetchJobs(ctx): RawJob[]`. Each ~50 lines. Failures are isolated
 Canonical `Job` record (title, company, location, remote flags, salary if present, description, apply URL, source, ATS family, posted/updated dates). Dedupe by apply-URL and by (company, normalized title); cross-board duplicates merge, keeping the richest record (prefer direct ATS source over aggregator).
 
 ### Rules filter ($0, removes ~80%)
-Config-file lanes: title/seniority patterns per lane, geo-eligibility from Lagos (UTC+1) for remote roles, visa-tag requirement for on-site lane, optional salary floor, company blocklist, already-seen suppression.
+Config-file lanes: title/seniority patterns per lane, geo-eligibility from Lagos (UTC+1) for remote roles, optional salary floor, company blocklist, already-seen suppression. The visa lane has no geo restriction: any on-site role qualifies if sponsorship is detectable — Arbeitnow's explicit visa tags plus keyword detection ("visa sponsorship", "relocation support", "work permit assistance") in JD text across all sources.
 
 ### Judge (LLM-as-judge)
 `claude -p` (Haiku-tier), anchored 1–10 rubric against the profile, strict JSON schema: `{score, matched_strengths[] (with resume evidence citations), gaps[], verdict}`. Cap: ~30 jobs scored per hunt, selected newest-first from the rules-filter survivors (recency is itself a signal — early applications get reviewed first). Coarse scale + evidence-citation requirement + schema validation mitigate known LLM-judge failure modes.
 
 ### Drafter (score ≥ 7 only)
 Sonnet-tier. Produces: short tailored cover letter, answers to the job's screening questions (Greenhouse provides the real question schema via API; other ATSs get predicted-common-questions answered from profile). **Fact-lock:** a validation pass rejects any draft containing claims absent from the profile JSON; one regeneration, then the job queues draft-less flagged "write manually."
+
+**Voice:** drafts must read like Jeremiah wrote them. Plain human language, contractions fine, no em-dashes, no emojis, no AI-sounding constructions ("I am thrilled", "delve", "leverage", marketing-style feature bullets). The drafter prompt carries a style guide distilled from Jeremiah's own writing samples; a **style-lint** pass (banned characters and phrase list) sits alongside the fact-lock as a second hard gate — a draft that fails either never reaches the queue as-is.
 
 ### Status lifecycle
 `sourced → filtered_out | scored → drafted → queued → approved → submitted → responded | rejected | stale`
@@ -126,7 +128,7 @@ The hunter runs in CI, so it cannot post macOS notifications itself. The applier
 ## Testing
 
 - **Adapters:** unit tests on checked-in fixture JSON (no network). Weekly live `smoke` command reports endpoint drift as a health warning.
-- **Fact-lock validator:** pure function; the most heavily unit-tested component (planted-fabrication cases).
+- **Fact-lock + style-lint validators:** pure functions; the most heavily unit-tested components (planted-fabrication cases; planted em-dashes, emojis, and banned phrases).
 - **Judge/drafter:** golden tests asserting schema validity and that planted disqualifiers are caught (deterministic properties, not exact output).
 - **Applier:** Playwright tests against saved HTML of real ATS forms per family; manual live run before a family strategy ships.
 - **Pipeline:** integration test over fixture sources into a temp DB asserting every state transition.
