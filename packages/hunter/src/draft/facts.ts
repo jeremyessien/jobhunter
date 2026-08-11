@@ -1,4 +1,4 @@
-const NUMBER = /\d*\.\d+|\d+(?:[.,]\d+)*/g
+const NUMBER = /\d+(?:[.,]\d+)+|\d*\.\d+|\d+/g
 
 const normalize = (token: string) => {
   const stripped = token.replace(/,/g, '')

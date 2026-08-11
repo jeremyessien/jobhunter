@@ -52,4 +52,18 @@ describe('factLock', () => {
   it('treats a leading-dot decimal as equal to its zero-prefixed form', () => {
     expect(factLock('I shaved .5 seconds off cold start times.', ['Baseline latency was 0.5s.'])).toEqual([])
   })
+
+  it('does not let a fabricated number fragment out of a chained version string', () => {
+    const violations = factLock('I improved outcomes by 0.3 seconds after the upgrade.', ['Upgraded pipeline from build 1.2.3'])
+    expect(violations).toEqual([expect.stringContaining('0.3')])
+  })
+
+  it('does not let a fabricated number fragment out of a chained IP address', () => {
+    const violations = factLock('I reduced errors by 0.5 percent.', ['We run the cluster at 10.0.0.5'])
+    expect(violations).toEqual([expect.stringContaining('0.5')])
+  })
+
+  it('matches a chained version number atomically when it appears in a source', () => {
+    expect(factLock('I upgraded to build 1.2.3.', ['Release notes: build 1.2.3 shipped Friday.'])).toEqual([])
+  })
 })
