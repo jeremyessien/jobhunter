@@ -1,0 +1,10 @@
+{
+  "name": "@jobhunter/core",
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": { "@types/node": "^22.0.0" }
+}

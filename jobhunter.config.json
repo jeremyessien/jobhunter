@@ -1,0 +1,9 @@
+{
+  "lanes": [
+    { "id": "remote-mobile", "titlePatterns": ["flutter", "mobile engineer", "mobile developer", "ios", "android", "react native"], "rule": "remote" },
+    { "id": "remote-frontend", "titlePatterns": ["frontend", "front[- ]end", "full[- ]?stack", "react", "next\\.?js"], "rule": "remote" },
+    { "id": "visa-anywhere", "titlePatterns": ["flutter", "mobile", "frontend", "full[- ]?stack", "react"], "rule": "visa" },
+    { "id": "nigeria-local", "titlePatterns": ["flutter", "mobile", "frontend", "full[- ]?stack", "react", "software engineer"], "rule": "nigeria" }
+  ],
+  "blocklist": []
+}
