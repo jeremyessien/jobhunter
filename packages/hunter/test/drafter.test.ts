@@ -191,4 +191,26 @@ describe('runDrafter', () => {
     expect(prompts[0]).toContain('Why Acme?')
     expect(prompts[0]).not.toContain(PREDICTED_QUESTIONS[0])
   })
+
+  it('states the lane-configured salary expectation in the prompt', async () => {
+    const db = await tmpDb()
+    await seedQueued(db, 'a:1', 8)
+    const salaryProfile: Profile = {
+      ...profile,
+      screening: { ...profile.screening, salaryExpectationsByLane: { x: '$90k-$110k' } },
+    }
+    const { invoke, prompts } = invokeReturning([cleanDraft])
+    await runDrafter({ db, config, profile: salaryProfile, invoke, fetchJson: async () => ({}) })
+    expect(prompts[0]).toContain('SALARY POLICY')
+    expect(prompts[0]).toContain('$90k-$110k')
+  })
+
+  it('falls back to the flexible-deflection salary line when no lane expectation exists', async () => {
+    const db = await tmpDb()
+    await seedQueued(db, 'a:1', 8)
+    const { invoke, prompts } = invokeReturning([cleanDraft])
+    await runDrafter({ db, config, profile, invoke, fetchJson: async () => ({}) })
+    expect(prompts[0]).toContain('flexible depending on the total package')
+    expect(prompts[0]).not.toContain('$90k')
+  })
 })

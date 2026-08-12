@@ -24,6 +24,7 @@ export const profileSchema = z.object({
       noticePeriod: z.string().optional(),
       salaryExpectation: z.string().optional(),
       workAuthorization: z.string().optional(),
+      salaryExpectationsByLane: z.record(z.string()).optional(),
     })
     .default({}),
 })
