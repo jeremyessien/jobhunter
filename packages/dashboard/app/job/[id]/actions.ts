@@ -20,7 +20,9 @@ export async function skip(form: FormData) {
 }
 
 export async function snooze(form: FormData) {
-  await snoozeJob(await getDb(), jobId(form), Number(form.get('days') ?? 3), new Date().toISOString())
+  const n = Number(form.get('days'))
+  const days = [1, 3, 7].includes(n) ? n : 3
+  await snoozeJob(await getDb(), jobId(form), days, new Date().toISOString())
   revalidatePath('/')
   redirect('/')
 }

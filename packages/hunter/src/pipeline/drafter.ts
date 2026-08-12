@@ -112,14 +112,17 @@ export async function runDrafter(deps: {
         violations = gate(draft, profile, job)
       }
       if (violations.length > 0) {
-        await db.execute({ sql: "UPDATE jobs SET draft_flag='manual' WHERE id=?", args: [job.id as number] })
-        manual++
+        const rs = await db.execute({
+          sql: "UPDATE jobs SET draft_flag='manual' WHERE id=? AND draft_flag IS NULL AND status='queued'",
+          args: [job.id as number],
+        })
+        if (rs.rowsAffected > 0) manual++
       } else {
-        await db.execute({
-          sql: "UPDATE jobs SET cover_letter=?, answers_json=?, draft_flag='drafted' WHERE id=?",
+        const rs = await db.execute({
+          sql: "UPDATE jobs SET cover_letter=?, answers_json=?, draft_flag='drafted' WHERE id=? AND draft_flag IS NULL AND status='queued'",
           args: [draft.cover_letter, JSON.stringify(draft.answers), job.id as number],
         })
-        drafted++
+        if (rs.rowsAffected > 0) drafted++
       }
     } catch (err) {
       console.error(`draft failed for ${job.company} - ${job.title}: ${String(err)}`)
