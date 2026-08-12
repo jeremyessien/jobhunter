@@ -21,23 +21,33 @@ export default async function SettingsPage({
     <>
       <Nav active="settings" />
       <main>
-        {saved && <p className="badge ready">Saved.</p>}
-        {error && <p className="warnings">{error}</p>}
+        <div className="page-head">
+          <h1>Settings</h1>
+          <span className="sub">{profile ? 'profile loaded' : 'no profile'}</span>
+        </div>
+        {saved && <p className="notice-ok">Saved.</p>}
+        {error && <p className="notice-err">{error}</p>}
 
-        <h2>Screening facts</h2>
-        {!profile && <p>No profile yet — run parse-resume first.</p>}
+        <h2 className="section-title">Screening facts</h2>
+        {!profile && (
+          <div className="empty">
+            <span className="status-dot" />
+            <p>No profile yet</p>
+            <p className="hint">run parse-resume first</p>
+          </div>
+        )}
         {profile && (
           <form action={saveScreening} className="card">
-            <h4>Notice period</h4>
+            <label className="field-label">Notice period</label>
             <input type="text" name="noticePeriod" defaultValue={screening.noticePeriod ?? ''} />
-            <h4>Work authorization</h4>
+            <label className="field-label">Work authorization</label>
             <input type="text" name="workAuthorization" defaultValue={screening.workAuthorization ?? ''} />
-            <h4>General salary expectation (fallback)</h4>
+            <label className="field-label">General salary expectation (fallback)</label>
             <input type="text" name="salaryExpectation" defaultValue={screening.salaryExpectation ?? ''} />
-            <h4>Per-lane salary expectations</h4>
+            <h3 className="section-title">Per-lane salary expectations</h3>
             {config.lanes.map((lane) => (
               <div key={lane.id}>
-                <label className="meta">{lane.id}</label>
+                <label className="field-label">{lane.id}</label>
                 <input
                   type="text"
                   name={`salary_${lane.id}`}
@@ -51,9 +61,9 @@ export default async function SettingsPage({
           </form>
         )}
 
-        <h2>Config (lanes, blocklist)</h2>
+        <h2 className="section-title">Config (lanes, blocklist)</h2>
         <form action={saveConfig} className="card">
-          <textarea name="configText" defaultValue={configText} style={{ minHeight: '16rem' }} />
+          <textarea name="configText" className="mono" defaultValue={configText} style={{ minHeight: '16rem' }} />
           <div className="actions">
             <button className="primary">Validate and save</button>
           </div>

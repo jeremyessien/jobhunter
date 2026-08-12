@@ -328,29 +328,6 @@ a.card-link::after {
   box-shadow: none;
 }
 
-.badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: var(--radius-chip);
-  font-size: 12px;
-  font-weight: 500;
-  background: var(--inset);
-  color: var(--ink-2);
-  margin-left: 8px;
-}
-.badge.ready {
-  background: var(--green-tint);
-  color: var(--green-ink);
-}
-.badge.manual {
-  background: var(--accent-tint);
-  color: var(--accent-ink);
-}
-.badge.warn {
-  background: var(--red-tint);
-  color: var(--red-ink);
-}
-
 .meta {
   color: var(--ink-2);
   font-size: 13px;
