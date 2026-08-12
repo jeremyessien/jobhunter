@@ -7,3 +7,5 @@ docs/superpowers/
 .superpowers/
 .vscode/
 .DS_Store
+.claude/
+packages/dashboard/next-env.d.ts
