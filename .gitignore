@@ -5,3 +5,5 @@ jobhunter.db*
 *.tsbuildinfo
 docs/superpowers/
 .superpowers/
+.vscode/
+.DS_Store
