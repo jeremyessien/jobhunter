@@ -52,7 +52,7 @@ export async function parseResume(db: Client, pdfPath: string, config: Config, i
           ON CONFLICT(id) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at`,
     args: [JSON.stringify(profile)],
   })
-  return profile
+  return profile as Profile
 }
 
 export async function getProfile(db: Client): Promise<Profile | null> {

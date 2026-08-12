@@ -74,6 +74,9 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      '@libsql/client':
+        specifier: ^0.14.0
+        version: 0.14.0
       '@types/node':
         specifier: ^22.0.0
         version: 22.20.1
