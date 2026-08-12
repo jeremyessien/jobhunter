@@ -112,6 +112,20 @@ export async function laneStats(db: Client) {
   }))
 }
 
+export async function queueOutlook(db: Client) {
+  const [jobs, runs] = await Promise.all([
+    db.execute("SELECT COUNT(*) AS n, MAX(score) AS best FROM jobs WHERE status='scored'"),
+    db.execute('SELECT MAX(started_at) AS last FROM runs'),
+  ])
+  const j = jobs.rows[0]
+  const r = runs.rows[0]
+  return {
+    scoredCount: Number(j.n),
+    bestScore: j.best === null ? null : Number(j.best),
+    lastHuntAt: r.last === null ? null : String(r.last),
+  }
+}
+
 export async function sourceHealth(db: Client) {
   const rs = await db.execute(
     'SELECT source, ok, started_at FROM runs ORDER BY source, started_at DESC, id DESC',

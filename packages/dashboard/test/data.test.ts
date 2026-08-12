@@ -3,7 +3,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { openDb } from '@jobhunter/core'
-import { queueJobs, getJob, trackerJobs, laneStats, sourceHealth } from '../lib/data.js'
+import { queueJobs, getJob, trackerJobs, laneStats, sourceHealth, queueOutlook } from '../lib/data.js'
 
 const NOW = '2026-08-12T09:00:00Z'
 const tmpDb = () => openDb('file:' + join(mkdtempSync(join(tmpdir(), 'jh-')), 't.db'))
@@ -126,5 +126,30 @@ describe('sourceHealth', () => {
     const rm = h.find((s) => s.source === 'remotive')
     expect(gh).toMatchObject({ consecutiveFailures: 3, warning: true, lastOk: '2026-08-10T00:00:00Z' })
     expect(rm).toMatchObject({ consecutiveFailures: 0, warning: false })
+  })
+})
+
+describe('queueOutlook', () => {
+  it('reports scored-below-bar count, best score, and last hunt time', async () => {
+    const db = await tmpDb()
+    await seed(db, { status: 'scored', score: 6 })
+    await seed(db, { status: 'scored', score: 4 })
+    await seed(db, { status: 'queued', score: 8 })
+    await seed(db, { status: 'filtered_out', score: null })
+    const run = (source: string, at: string) =>
+      db.execute({
+        sql: 'INSERT INTO runs(started_at, finished_at, source, ok, jobs_found) VALUES (?,?,?,1,0)',
+        args: [at, at, source],
+      })
+    await run('greenhouse', '2026-08-11T00:00:00Z')
+    await run('remotive', '2026-08-12T06:00:00Z')
+    const o = await queueOutlook(db)
+    expect(o).toEqual({ scoredCount: 2, bestScore: 6, lastHuntAt: '2026-08-12T06:00:00Z' })
+  })
+
+  it('handles an empty database', async () => {
+    const db = await tmpDb()
+    const o = await queueOutlook(db)
+    expect(o).toEqual({ scoredCount: 0, bestScore: null, lastHuntAt: null })
   })
 })

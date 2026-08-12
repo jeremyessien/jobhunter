@@ -112,6 +112,29 @@ ul {
   color: var(--ink-2);
   margin: 24px 0 10px;
 }
+.desc {
+  color: var(--ink-2);
+  font-size: 13.5px;
+  margin: 2px 0 16px;
+  max-width: 62ch;
+}
+code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.9em;
+  background: var(--inset);
+  padding: 1px 6px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.steps {
+  display: grid;
+  gap: 12px;
+  padding-left: 1.2rem;
+  max-width: 68ch;
+}
+.empty .hint a {
+  color: var(--accent-ink);
+}
 
 .topbar {
   position: sticky;
@@ -142,6 +165,31 @@ ul {
   border-radius: 50%;
   background: var(--accent);
   animation: breathe 2.4s ease-in-out infinite;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.help-link {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-3);
+  box-shadow: 0 0 0 1px var(--line-strong);
+  transition: color 0.12s ease-out, background-color 0.12s ease-out;
+}
+.help-link:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+.help-link[aria-current="page"] {
+  color: var(--accent-ink);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 .topbar-nav {
   display: flex;
@@ -464,6 +512,15 @@ pre.jd {
 }
 .action-bar .actions {
   margin: 12px 0;
+}
+.action-bar .action-help {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+}
+.warnings .desc {
+  color: inherit;
+  opacity: 0.85;
+  margin: 4px 0 6px;
 }
 @media (max-width: 767px) {
   .action-bar {
