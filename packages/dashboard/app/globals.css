@@ -402,7 +402,7 @@ textarea {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--ink-3);
+  color: var(--ink-2);
   margin: 14px 0 6px;
 }
 
@@ -501,7 +501,7 @@ th {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--ink-3);
+  color: var(--ink-2);
   padding: 10px 14px;
   border-bottom: 1px solid var(--line-strong);
 }
