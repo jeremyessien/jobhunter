@@ -1,10 +1,10 @@
 import type { Client } from '@libsql/client'
 import { z } from 'zod'
 import type { Config, InvokeClaude } from '@jobhunter/core'
-import type { Profile } from '../profile.js'
-import { styleLint, BANNED_PHRASES } from '../draft/style.js'
-import { factLock } from '../draft/facts.js'
-import { fetchGreenhouseQuestions } from '../draft/questions.js'
+import type { Profile } from '../profile'
+import { styleLint, BANNED_PHRASES } from '../draft/style'
+import { factLock } from '../draft/facts'
+import { fetchGreenhouseQuestions } from '../draft/questions'
 
 export const draftSchema = z.object({
   cover_letter: z.string().min(1),

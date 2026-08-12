@@ -1,3 +1,3 @@
-export * from './config.js'
-export * from './db.js'
-export * from './claude.js'
+export * from './config'
+export * from './db'
+export * from './claude'

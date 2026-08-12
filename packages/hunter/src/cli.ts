@@ -1,12 +1,12 @@
 import { loadConfig, openDb, invokeClaude } from '@jobhunter/core'
-import { hunt } from './hunt.js'
-import { greenhouseAdapter } from './sources/greenhouse.js'
-import { remotiveAdapter } from './sources/remotive.js'
-import { makeThrottledFetch } from './net.js'
-import { parseResume, getProfile } from './profile.js'
-import { seedCompanies } from './seed.js'
-import { listQueue } from './queue.js'
-import { runDrafter } from './pipeline/drafter.js'
+import { hunt } from './hunt'
+import { greenhouseAdapter } from './sources/greenhouse'
+import { remotiveAdapter } from './sources/remotive'
+import { makeThrottledFetch } from './net'
+import { parseResume, getProfile } from './profile'
+import { seedCompanies } from './seed'
+import { listQueue } from './queue'
+import { runDrafter } from './pipeline/drafter'
 
 const [command, arg] = process.argv.slice(2)
 
