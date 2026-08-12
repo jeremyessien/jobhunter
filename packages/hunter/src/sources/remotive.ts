@@ -1,5 +1,5 @@
-import type { RawJob } from '../types.js'
-import type { AdapterCtx, SourceAdapter } from './types.js'
+import type { RawJob } from '../types'
+import type { AdapterCtx, SourceAdapter } from './types'
 
 type RemotiveJob = {
   id: number

@@ -48,6 +48,7 @@ const MIGRATIONS = [
     json TEXT NOT NULL,
     updated_at TEXT NOT NULL
   )`,
+  `ALTER TABLE jobs ADD COLUMN snoozed_until TEXT`,
 ]
 
 export async function openDb(url: string, authToken?: string): Promise<Client> {

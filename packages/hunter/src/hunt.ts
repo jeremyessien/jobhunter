@@ -1,11 +1,11 @@
 import type { Client } from '@libsql/client'
 import type { Config, InvokeClaude } from '@jobhunter/core'
-import type { SourceAdapter } from './sources/types.js'
-import { ingestJobs } from './pipeline/ingest.js'
-import { runFilter } from './pipeline/filter.js'
-import { runJudge } from './pipeline/judge.js'
-import { runDrafter } from './pipeline/drafter.js'
-import { getProfile } from './profile.js'
+import type { SourceAdapter } from './sources/types'
+import { ingestJobs } from './pipeline/ingest'
+import { runFilter } from './pipeline/filter'
+import { runJudge } from './pipeline/judge'
+import { runDrafter } from './pipeline/drafter'
+import { getProfile } from './profile'
 
 export async function hunt(deps: {
   db: Client

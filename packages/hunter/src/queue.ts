@@ -1,4 +1,4 @@
-import type { Client } from '@libsql/client'
+import type { Client, Row } from '@libsql/client'
 
 export async function listQueue(db: Client): Promise<string[]> {
   const rs = await db.execute(
@@ -7,6 +7,6 @@ export async function listQueue(db: Client): Promise<string[]> {
   const marker = (flag: unknown) =>
     flag === 'drafted' ? ' [draft ready]' : flag === 'manual' ? ' [write manually]' : ''
   return rs.rows.map(
-    (r) => `[${r.score}/10] ${r.title} — ${r.company} (${r.lane}) ${r.apply_url}${marker(r.draft_flag)}`,
+    (r: Row) => `[${r.score}/10] ${r.title} — ${r.company} (${r.lane}) ${r.apply_url}${marker(r.draft_flag)}`,
   )
 }

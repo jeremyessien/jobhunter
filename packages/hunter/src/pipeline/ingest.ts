@@ -1,5 +1,5 @@
 import type { Client } from '@libsql/client'
-import type { RawJob } from '../types.js'
+import type { RawJob } from '../types'
 
 export function stripHtml(html: string): string {
   return html

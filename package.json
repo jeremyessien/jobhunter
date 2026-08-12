@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "jobhunter": "tsx packages/hunter/src/cli.ts"
+    "jobhunter": "tsx packages/hunter/src/cli.ts",
+    "dashboard": "pnpm --filter @jobhunter/dashboard dev"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

@@ -1,5 +1,5 @@
-import type { RawJob } from '../types.js'
-import type { AdapterCtx, SourceAdapter } from './types.js'
+import type { RawJob } from '../types'
+import type { AdapterCtx, SourceAdapter } from './types'
 
 const decodeEntities = (s: string) =>
   s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")

@@ -191,4 +191,60 @@ describe('runDrafter', () => {
     expect(prompts[0]).toContain('Why Acme?')
     expect(prompts[0]).not.toContain(PREDICTED_QUESTIONS[0])
   })
+
+  it('states the lane-configured salary expectation in the prompt', async () => {
+    const db = await tmpDb()
+    await seedQueued(db, 'a:1', 8)
+    const salaryProfile: Profile = {
+      ...profile,
+      screening: { ...profile.screening, salaryExpectationsByLane: { x: '$90k-$110k' } },
+    }
+    const { invoke, prompts } = invokeReturning([cleanDraft])
+    await runDrafter({ db, config, profile: salaryProfile, invoke, fetchJson: async () => ({}) })
+    expect(prompts[0]).toContain('SALARY POLICY')
+    expect(prompts[0]).toContain('$90k-$110k')
+  })
+
+  it('falls back to the flexible-deflection salary line when no lane expectation exists', async () => {
+    const db = await tmpDb()
+    await seedQueued(db, 'a:1', 8)
+    const { invoke, prompts } = invokeReturning([cleanDraft])
+    await runDrafter({ db, config, profile, invoke, fetchJson: async () => ({}) })
+    expect(prompts[0]).toContain('flexible depending on the total package')
+    expect(prompts[0]).not.toContain('$90k')
+  })
+
+  it('does not clobber a human draft saved concurrently mid-hunt', async () => {
+    const db = await tmpDb()
+    await seedQueued(db, 'a:1', 8)
+    const invoke = (async () => {
+      await db.execute({
+        sql: "UPDATE jobs SET cover_letter='human text', draft_flag='drafted' WHERE external_key='a:1'",
+        args: [],
+      })
+      return cleanDraft
+    }) as InvokeClaude
+    const res = await runDrafter({ db, config, profile, invoke, fetchJson: async () => ({}) })
+    expect(res).toEqual({ drafted: 0, manual: 0, deferred: 0 })
+    const rs = await db.execute("SELECT cover_letter, draft_flag FROM jobs WHERE external_key='a:1'")
+    expect(rs.rows[0].cover_letter).toBe('human text')
+    expect(rs.rows[0].draft_flag).toBe('drafted')
+  })
+
+  it('does not overwrite a human draft with a manual flag when saved concurrently mid-hunt', async () => {
+    const db = await tmpDb()
+    await seedQueued(db, 'a:1', 8)
+    const invoke = (async () => {
+      await db.execute({
+        sql: "UPDATE jobs SET cover_letter='human text', draft_flag='drafted' WHERE external_key='a:1'",
+        args: [],
+      })
+      return fabricatingDraft
+    }) as InvokeClaude
+    const res = await runDrafter({ db, config, profile, invoke, fetchJson: async () => ({}) })
+    expect(res).toEqual({ drafted: 0, manual: 0, deferred: 0 })
+    const rs = await db.execute("SELECT cover_letter, draft_flag FROM jobs WHERE external_key='a:1'")
+    expect(rs.rows[0].cover_letter).toBe('human text')
+    expect(rs.rows[0].draft_flag).toBe('drafted')
+  })
 })

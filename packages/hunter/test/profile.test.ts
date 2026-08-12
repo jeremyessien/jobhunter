@@ -39,4 +39,16 @@ describe('parseResume', () => {
     const rs = await db.execute('SELECT COUNT(*) AS n FROM profile')
     expect(rs.rows[0].n).toBe(1)
   })
+
+  it('accepts per-lane salary expectations in screening', async () => {
+    const db = await tmpDb()
+    const withSalary = {
+      ...canned,
+      screening: { salaryExpectationsByLane: { 'remote-mobile': '$90k-$110k' } },
+    }
+    const invoke = (() => Promise.resolve(withSalary)) as unknown as InvokeClaude
+    await parseResume(db, '/fake/resume.pdf', config, invoke)
+    const profile = await getProfile(db)
+    expect(profile?.screening.salaryExpectationsByLane).toEqual({ 'remote-mobile': '$90k-$110k' })
+  })
 })

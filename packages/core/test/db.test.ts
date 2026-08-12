@@ -30,4 +30,10 @@ describe('openDb', () => {
     await db.execute(sql)
     await expect(db.execute(sql)).rejects.toThrow()
   })
+
+  it('has the snoozed_until column on jobs', async () => {
+    const db = await openDb(tmpUrl())
+    const rs = await db.execute("SELECT name FROM pragma_table_info('jobs') WHERE name='snoozed_until'")
+    expect(rs.rows).toHaveLength(1)
+  })
 })

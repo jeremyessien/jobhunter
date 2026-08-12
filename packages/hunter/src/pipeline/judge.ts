@@ -1,7 +1,7 @@
 import type { Client } from '@libsql/client'
 import { z } from 'zod'
 import type { Config, InvokeClaude } from '@jobhunter/core'
-import type { Profile } from '../profile.js'
+import type { Profile } from '../profile'
 
 export const scoreSchema = z.object({
   score: z.number().int().min(1).max(10),

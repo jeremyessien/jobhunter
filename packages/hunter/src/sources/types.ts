@@ -1,6 +1,6 @@
 import type { Client } from '@libsql/client'
 import type { Config } from '@jobhunter/core'
-import type { RawJob } from '../types.js'
+import type { RawJob } from '../types'
 
 export type AdapterCtx = {
   db: Client
