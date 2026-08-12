@@ -3,3 +3,5 @@ jobhunter.db*
 .env
 .next/
 *.tsbuildinfo
+docs/superpowers/
+.superpowers/
