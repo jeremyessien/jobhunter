@@ -1,7 +1,6 @@
-import { getDb, getConfig } from '../../lib/db'
+import { getDb, getConfig, configPath } from '../../lib/db'
 import { getProfile } from '@jobhunter/hunter'
 import { readFileSync } from 'node:fs'
-import { configPath } from '../../lib/db'
 import { saveScreening, saveConfig } from './actions'
 
 export const dynamic = 'force-dynamic'

@@ -12,6 +12,13 @@ export default async function TrackerPage() {
       <h2>Applications</h2>
       {jobs.length === 0 && <p>Nothing submitted yet.</p>}
       <table>
+        <thead>
+          <tr>
+            <th>Job</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
         <tbody>
           {jobs.map((j) => (
             <tr key={j.id}>
