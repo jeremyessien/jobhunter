@@ -23,9 +23,13 @@ export default async function TrackerPage() {
       <Nav active="tracker" />
       <main>
         <div className="page-head">
-          <h1>Tracker</h1>
+          <h1>Applications</h1>
           <span className="sub">{jobs.length} sent</span>
         </div>
+        <p className="desc">
+          Everything you have marked as submitted, and how each one is going. Tag replies here so the response rates
+          mean something.
+        </p>
         <div className="stats">
           <div className="stat">
             <div className="num">{jobs.length}</div>
@@ -48,7 +52,10 @@ export default async function TrackerPage() {
           <div className="empty">
             <span className="status-dot" />
             <p>Nothing submitted yet</p>
-            <p className="hint">approve a job, apply, then mark it submitted</p>
+            <p className="hint">
+              approve a job in Review, apply on the company site, then hit Mark submitted on the job&apos;s page — it
+              shows up here
+            </p>
           </div>
         )}
         {jobs.length > 0 && (
@@ -94,7 +101,8 @@ export default async function TrackerPage() {
         )}
         {stats.length > 0 && (
           <>
-            <h2 className="section-title">Per-lane response rate</h2>
+            <h2 className="section-title">Response rate by lane</h2>
+            <p className="desc">A lane is one of your parallel search tracks — this shows which track actually converts.</p>
             <table>
               <thead>
                 <tr>

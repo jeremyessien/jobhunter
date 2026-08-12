@@ -13,7 +13,7 @@ const items: { id: PageId; href: string; label: string; glyph: ReactNode }[] = [
   {
     id: 'queue',
     href: '/',
-    label: 'Queue',
+    label: 'Review',
     glyph: icon(
       <>
         <path d="M22 12h-6l-2 3h-4l-2-3H2" />
@@ -24,7 +24,7 @@ const items: { id: PageId; href: string; label: string; glyph: ReactNode }[] = [
   {
     id: 'tracker',
     href: '/tracker',
-    label: 'Tracker',
+    label: 'Applications',
     glyph: icon(
       <>
         <line x1="22" y1="2" x2="11" y2="13" />
@@ -35,7 +35,7 @@ const items: { id: PageId; href: string; label: string; glyph: ReactNode }[] = [
   {
     id: 'health',
     href: '/health',
-    label: 'Health',
+    label: 'Sources',
     glyph: icon(<polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />),
   },
   {
@@ -58,7 +58,7 @@ const items: { id: PageId; href: string; label: string; glyph: ReactNode }[] = [
   },
 ]
 
-export function Nav({ active }: { active: PageId }) {
+export function Nav({ active }: { active: PageId | 'how' }) {
   return (
     <>
       <header className="topbar">
@@ -66,13 +66,18 @@ export function Nav({ active }: { active: PageId }) {
           <span className="dot" />
           JOBHUNTER
         </span>
-        <nav className="topbar-nav" aria-label="Primary">
-          {items.map((i) => (
-            <Link key={i.id} href={i.href} aria-current={i.id === active ? 'page' : undefined}>
-              {i.label}
-            </Link>
-          ))}
-        </nav>
+        <span className="topbar-right">
+          <nav className="topbar-nav" aria-label="Primary">
+            {items.map((i) => (
+              <Link key={i.id} href={i.href} aria-current={i.id === active ? 'page' : undefined}>
+                {i.label}
+              </Link>
+            ))}
+          </nav>
+          <Link className="help-link" href="/how" aria-label="How it works" aria-current={active === 'how' ? 'page' : undefined}>
+            ?
+          </Link>
+        </span>
       </header>
       <nav className="tabbar" aria-label="Primary">
         {items.map((i) => (

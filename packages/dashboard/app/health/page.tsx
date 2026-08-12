@@ -15,14 +15,20 @@ export default async function HealthPage() {
       <Nav active="health" />
       <main>
         <div className="page-head">
-          <h1>Health</h1>
+          <h1>Sources</h1>
           <span className="sub">{lastHunt ? `last hunt ${timeAgo(lastHunt)}` : 'no hunts yet'}</span>
         </div>
+        <p className="desc">
+          The job boards this tool pulls from. A source turns red after 3 failed runs in a row — the rest keep working
+          without it.
+        </p>
         {sources.length === 0 && (
           <div className="empty">
             <span className="status-dot" />
             <p>No hunts recorded yet</p>
-            <p className="hint">run a hunt to see source health</p>
+            <p className="hint">
+              in a terminal, run <code>pnpm jobhunter hunt</code> to start pulling jobs
+            </p>
           </div>
         )}
         {failing.length > 0 && (

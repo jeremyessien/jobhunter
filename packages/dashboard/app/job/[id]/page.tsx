@@ -64,36 +64,45 @@ export default async function JobPage({
           </div>
           {job.verdict && <p className="meta">{job.verdict}</p>}
           {job.strengths.length > 0 && (
-            <ul>
-              {job.strengths.map((s, i) => (
-                <li key={i}>
-                  {s.claim} <span className="meta">({s.evidence})</span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <h3 className="section-title">Why you fit</h3>
+              <ul>
+                {job.strengths.map((s, i) => (
+                  <li key={i}>
+                    {s.claim} <span className="meta">({s.evidence})</span>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
           {job.gaps.length > 0 && (
-            <div className="chips">
-              {job.gaps.map((g, i) => (
-                <span key={i} className="chip gap">
-                  {g}
-                </span>
-              ))}
-            </div>
+            <>
+              <h3 className="section-title">Gaps to be ready for</h3>
+              <div className="chips">
+                {job.gaps.map((g, i) => (
+                  <span key={i} className="chip gap">
+                    {g}
+                  </span>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
         <div className="job-grid">
           <div className="jd-panel">
             <details className="jd-details" open>
-              <summary>Job description</summary>
+              <summary>The full posting</summary>
               <pre className="jd">{job.description}</pre>
             </details>
           </div>
           <div>
             {warnings.length > 0 && (
               <div className="warnings">
-                <strong>Gate warnings (saved anyway)</strong>
+                <strong>Heads-up — your edits were saved anyway</strong>
+                <p className="desc">
+                  Automatic checks flagged the points below. Your words always win; fix them only if they are right.
+                </p>
                 <ul>
                   {warnings.map((w, i) => (
                     <li key={i}>{w}</li>
@@ -106,8 +115,12 @@ export default async function JobPage({
               <input type="hidden" name="id" value={job.id} />
               <input type="hidden" name="answerCount" value={job.answers.length} />
               <h3 className="section-title">
-                Cover letter {job.draftFlag === 'manual' && <span className="chip warn">write manually</span>}
+                Cover letter {job.draftFlag === 'manual' && <span className="chip warn">needs your own words</span>}
               </h3>
+              <p className="desc">
+                Drafted from your profile and this posting only — it cannot invent facts. Edit freely; your edits are
+                never overwritten.
+              </p>
               <textarea name="coverLetter" defaultValue={job.coverLetter ?? ''} />
               {job.answers.map((a, i) => (
                 <div key={i}>
@@ -123,6 +136,10 @@ export default async function JobPage({
 
             {job.status === 'queued' && (
               <div className="action-bar">
+                <p className="desc action-help">
+                  Approve = you plan to apply · Skip = never show this job again · Snooze = hide it for a few days.
+                  After you apply on the company site, come back and hit Mark submitted.
+                </p>
                 <div className="actions">
                   <form action={approve}>
                     <input type="hidden" name="id" value={job.id} />
