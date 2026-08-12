@@ -2,3 +2,4 @@ node_modules/
 jobhunter.db*
 .env
 .next/
+*.tsbuildinfo
