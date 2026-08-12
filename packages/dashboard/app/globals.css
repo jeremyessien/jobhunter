@@ -33,7 +33,6 @@
   --shadow-raised: 0 0 0 1px var(--line-strong), 0 6px 20px rgba(0, 0, 0, 0.45);
 
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-link: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @view-transition {
@@ -468,7 +467,7 @@ pre.jd {
 }
 @media (max-width: 767px) {
   .action-bar {
-    bottom: calc(52px + env(safe-area-inset-bottom));
+    bottom: calc(60px + env(safe-area-inset-bottom));
   }
 }
 @media (min-width: 1024px) {
@@ -558,9 +557,10 @@ tbody tr:hover {
   margin-bottom: 10px;
   animation: fade-up 0.35s var(--ease-out-strong) backwards;
 }
-.health-row:nth-child(2) { animation-delay: 60ms; }
-.health-row:nth-child(3) { animation-delay: 120ms; }
-.health-row:nth-child(n + 4) { animation-delay: 180ms; }
+.health-list > .health-row:nth-child(1) { animation-delay: 0ms; }
+.health-list > .health-row:nth-child(2) { animation-delay: 60ms; }
+.health-list > .health-row:nth-child(3) { animation-delay: 120ms; }
+.health-list > .health-row:nth-child(n + 4) { animation-delay: 180ms; }
 .health-row .source {
   font-weight: 600;
   min-width: 110px;

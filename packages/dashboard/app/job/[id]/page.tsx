@@ -111,9 +111,9 @@ export default async function JobPage({
               <textarea name="coverLetter" defaultValue={job.coverLetter ?? ''} />
               {job.answers.map((a, i) => (
                 <div key={i}>
-                  <label className="field-label">{a.question}</label>
+                  <label className="field-label" htmlFor={`a_${i}`}>{a.question}</label>
                   <input type="hidden" name={`q_${i}`} value={a.question} />
-                  <textarea name={`a_${i}`} defaultValue={a.answer} />
+                  <textarea id={`a_${i}`} name={`a_${i}`} defaultValue={a.answer} />
                 </div>
               ))}
               <div className="actions">

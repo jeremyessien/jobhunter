@@ -66,7 +66,7 @@ export function Nav({ active }: { active: PageId }) {
           <span className="dot" />
           JOBHUNTER
         </span>
-        <nav className="topbar-nav">
+        <nav className="topbar-nav" aria-label="Primary">
           {items.map((i) => (
             <Link key={i.id} href={i.href} aria-current={i.id === active ? 'page' : undefined}>
               {i.label}
@@ -74,7 +74,7 @@ export function Nav({ active }: { active: PageId }) {
           ))}
         </nav>
       </header>
-      <nav className="tabbar">
+      <nav className="tabbar" aria-label="Primary">
         {items.map((i) => (
           <Link key={i.id} href={i.href} aria-current={i.id === active ? 'page' : undefined}>
             {i.glyph}

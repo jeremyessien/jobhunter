@@ -38,18 +38,19 @@ export default async function SettingsPage({
         )}
         {profile && (
           <form action={saveScreening} className="card">
-            <label className="field-label">Notice period</label>
-            <input type="text" name="noticePeriod" defaultValue={screening.noticePeriod ?? ''} />
-            <label className="field-label">Work authorization</label>
-            <input type="text" name="workAuthorization" defaultValue={screening.workAuthorization ?? ''} />
-            <label className="field-label">General salary expectation (fallback)</label>
-            <input type="text" name="salaryExpectation" defaultValue={screening.salaryExpectation ?? ''} />
+            <label className="field-label" htmlFor="noticePeriod">Notice period</label>
+            <input type="text" id="noticePeriod" name="noticePeriod" defaultValue={screening.noticePeriod ?? ''} />
+            <label className="field-label" htmlFor="workAuthorization">Work authorization</label>
+            <input type="text" id="workAuthorization" name="workAuthorization" defaultValue={screening.workAuthorization ?? ''} />
+            <label className="field-label" htmlFor="salaryExpectation">General salary expectation (fallback)</label>
+            <input type="text" id="salaryExpectation" name="salaryExpectation" defaultValue={screening.salaryExpectation ?? ''} />
             <h3 className="section-title">Per-lane salary expectations</h3>
             {config.lanes.map((lane) => (
               <div key={lane.id}>
-                <label className="field-label">{lane.id}</label>
+                <label className="field-label" htmlFor={`salary_${lane.id}`}>{lane.id}</label>
                 <input
                   type="text"
+                  id={`salary_${lane.id}`}
                   name={`salary_${lane.id}`}
                   defaultValue={screening.salaryExpectationsByLane?.[lane.id] ?? ''}
                 />
