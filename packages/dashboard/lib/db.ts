@@ -17,7 +17,10 @@ export function getDb(): Promise<Client> {
     const url = config.dbUrl.startsWith('file:')
       ? 'file:' + resolve(repoRoot, config.dbUrl.slice(5))
       : config.dbUrl
-    client = openDb(url, config.dbAuthToken)
+    client = openDb(url, config.dbAuthToken).catch((e) => {
+      client = null
+      throw e
+    })
   }
   return client
 }

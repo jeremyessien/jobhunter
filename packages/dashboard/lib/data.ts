@@ -108,7 +108,7 @@ export async function laneStats(db: Client) {
   return rs.rows.map((r) => ({
     lane: String(r.lane ?? 'unknown'),
     submitted: Number(r.submitted),
-    responded: Number(r.responded ?? 0),
+    responded: Number(r.responded),
   }))
 }
 
@@ -125,7 +125,7 @@ export async function sourceHealth(db: Client) {
       consecutiveFailures: 0,
       counting: true,
     }
-    if (r.ok === 1 || r.ok === 1n) {
+    if (r.ok === 1) {
       if (entry.lastOk === null) entry.lastOk = String(r.started_at)
       entry.counting = false
     } else if (entry.counting) {
