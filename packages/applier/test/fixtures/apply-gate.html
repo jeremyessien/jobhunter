@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<head><title>position page</title></head>
+<body>
+  <h1>Senior Engineer</h1>
+  <p>A great role at a great company.</p>
+  <button id="apply-cta">Apply for this job</button>
+  <div id="form-area" hidden>
+    <label for="first_name">First Name</label>
+    <input id="first_name" type="text" />
+    <label for="email">Email</label>
+    <input id="email" type="text" />
+  </div>
+  <script>
+    document.getElementById('apply-cta').addEventListener('click', () => {
+      document.getElementById('form-area').hidden = false
+    })
+  </script>
+</body>
+</html>

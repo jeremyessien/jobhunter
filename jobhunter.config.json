@@ -6,5 +6,6 @@
     { "id": "nigeria-local", "titlePatterns": ["flutter", "mobile", "frontend", "full[- ]?stack", "react", "software engineer"], "rule": "nigeria" }
   ],
   "blocklist": [],
-  "queueThreshold": 6
+  "queueThreshold": 6,
+  "resumePath": "/Users/jeremiahekanem/Desktop/resume/Jeremiah Ekanem - Senior Software Engineer - Aug 2026.pdf"
 }

@@ -1,8 +1,7 @@
-import { loadConfig, openDb, invokeClaude } from '@jobhunter/core'
+import { loadConfig, openDb, invokeClaude, makeThrottledFetch } from '@jobhunter/core'
 import { hunt } from './hunt'
 import { greenhouseAdapter } from './sources/greenhouse'
 import { remotiveAdapter } from './sources/remotive'
-import { makeThrottledFetch } from './net'
 import { parseResume, getProfile } from './profile'
 import { seedCompanies } from './seed'
 import { listQueue } from './queue'
@@ -51,6 +50,11 @@ switch (command) {
     console.log(`draft: ${res.drafted} drafted, ${res.manual} manual, ${res.deferred} deferred`)
     break
   }
+  case 'apply': {
+    const { runApply } = await import('@jobhunter/applier')
+    await runApply(db, config)
+    break
+  }
   default:
-    console.log('usage: jobhunter <hunt|parse-resume|seed-companies|queue|draft>')
+    console.log('usage: jobhunter <hunt|parse-resume|seed-companies|queue|draft|apply>')
 }

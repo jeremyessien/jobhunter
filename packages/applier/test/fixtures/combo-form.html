@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head><title>combo fixture</title></head>
+<body>
+  <form>
+    <label for="question_1">Are you willing to work remotely?</label>
+    <input id="question_1" role="combobox" aria-expanded="false" readonly value="" />
+    <div id="listbox_1" hidden>
+      <div role="option">Yes</div>
+      <div role="option">No</div>
+    </div>
+
+    <label for="question_2">Notice period</label>
+    <select id="question_2">
+      <option value="">Select...</option>
+      <option value="30">30 days</option>
+      <option value="60">60 days</option>
+    </select>
+
+    <button type="submit">Submit application</button>
+  </form>
+  <script>
+    const combo = document.getElementById('question_1')
+    const listbox = document.getElementById('listbox_1')
+    combo.addEventListener('click', () => {
+      listbox.hidden = false
+      combo.setAttribute('aria-expanded', 'true')
+    })
+    for (const option of listbox.querySelectorAll('[role="option"]')) {
+      option.addEventListener('click', () => {
+        combo.value = option.textContent
+        listbox.hidden = true
+        combo.setAttribute('aria-expanded', 'false')
+      })
+    }
+  </script>
+</body>
+</html>

@@ -27,6 +27,11 @@ describe('loadConfig', () => {
     expect(config.visaPatterns.length).toBeGreaterThan(0)
   })
 
+  it('accepts an optional resumePath', () => {
+    const config = loadConfig(writeTmp({ ...validConfig, resumePath: '/tmp/resume.pdf' }))
+    expect(config.resumePath).toBe('/tmp/resume.pdf')
+  })
+
   it('rejects a config with no lanes', () => {
     expect(() => loadConfig(writeTmp({ lanes: [] }))).toThrow()
   })

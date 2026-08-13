@@ -76,9 +76,10 @@ export default async function SettingsPage({
 
         <h2 className="section-title">Config (lanes, blocklist, review bar)</h2>
         <p className="desc">
-          The raw configuration: which job titles each lane matches, companies to never apply to, and{' '}
-          <span className="mono">queueThreshold</span> — the 0–10 score a job needs to reach Review. Checked for
-          mistakes before saving.
+          The raw configuration: which job titles each lane matches, companies to never apply to,{' '}
+          <span className="mono">queueThreshold</span> — the 0–10 score a job needs to reach Review — and{' '}
+          <span className="mono">resumePath</span>, the PDF attached to every application. Checked for mistakes before
+          saving.
         </p>
         <form action={saveConfig} className="card">
           <textarea name="configText" className="mono" defaultValue={configText} style={{ minHeight: '16rem' }} />

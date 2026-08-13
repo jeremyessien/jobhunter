@@ -1,10 +1,10 @@
 {
-  "name": "@jobhunter/hunter",
+  "name": "@jobhunter/applier",
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {
-    "@jobhunter/applier": "workspace:*",
     "@jobhunter/core": "workspace:*",
+    "playwright": "^1.49.0",
     "zod": "^3.24.0"
   },
   "devDependencies": { "@types/node": "^22.0.0", "@libsql/client": "^0.14.0" }

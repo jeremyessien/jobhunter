@@ -33,8 +33,10 @@ export default function HowPage() {
             apply), Skip (never see it again), or Snooze (hide it for a few days).
           </li>
           <li>
-            <strong>Apply.</strong> Use the posting&apos;s apply link, paste your draft into the real form, submit —
-            then come back and hit Mark submitted on the job&apos;s page.
+            <strong>Apply.</strong> Run <code>pnpm jobhunter apply</code> — it opens each approved job&apos;s form in a
+            browser, fills what it can from your drafts, attaches your resume, and highlights anything it could not
+            fill. You review and click Submit yourself; it then records the job as submitted with a screenshot. For
+            sites it cannot fill, it opens the page and prints your drafts for copy-paste.
           </li>
           <li>
             <strong>Track.</strong> Tag replies in <Link href="/tracker">Applications</Link> to learn which lane
