@@ -10,3 +10,5 @@ docs/superpowers/
 
 applier-profile/
 applier-sessions/
+.claude/
+packages/dashboard/next-env.d.ts
