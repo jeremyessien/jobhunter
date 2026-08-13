@@ -16,12 +16,7 @@ export type GhField = z.infer<typeof fieldSchema>
 export type GhSection = 'standard' | 'location' | 'demographic' | 'compliance'
 export type GhQuestion = z.infer<typeof questionSchema> & { section: GhSection }
 
-const APPLY_URL_PATTERN = /greenhouse\.io\/([^/]+)\/jobs\/(\d+)/
-
-export function parseGreenhouseUrl(applyUrl: string): { slug: string; id: string } | null {
-  const match = APPLY_URL_PATTERN.exec(applyUrl)
-  return match ? { slug: match[1], id: match[2] } : null
-}
+export { parseGreenhouseUrl } from '@jobhunter/core'
 
 const parseSection = (raw: unknown, section: GhSection): GhQuestion[] => {
   if (!Array.isArray(raw)) return []
