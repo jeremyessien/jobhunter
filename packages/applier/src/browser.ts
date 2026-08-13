@@ -19,6 +19,45 @@ export async function formTarget(page: Page): Promise<Frame | null> {
   return null
 }
 
+const WALL_PATTERNS = /just a moment|attention required|security verification|verify you are human|checking your browser|cloudflare/i
+
+export function looksLikeSecurityWall(title: string, bodyText: string): boolean {
+  return WALL_PATTERNS.test(title) || WALL_PATTERNS.test(bodyText)
+}
+
+export async function findForm(
+  page: Page,
+  opts: { timeoutMs: number; applyClickAfterMs?: number; wallGraceMs?: number; log: (message: string) => void },
+): Promise<Frame | null> {
+  const applyClickAfterMs = opts.applyClickAfterMs ?? 4000
+  const started = Date.now()
+  let deadline = started + opts.timeoutMs
+  let wallReported = false
+  let applyClicked = false
+
+  while (Date.now() < deadline) {
+    const target = await formTarget(page)
+    if (target) return target
+    try {
+      const title = await page.title()
+      const body = await page.evaluate(() => document.body?.innerText.slice(0, 600) ?? '')
+      if (looksLikeSecurityWall(title, body)) {
+        if (!wallReported) {
+          wallReported = true
+          deadline += opts.wallGraceMs ?? 90000
+          opts.log('  the site is checking you are human — if the browser asks, complete the check; still watching')
+        }
+      } else if (!applyClicked && Date.now() - started > applyClickAfterMs) {
+        applyClicked = true
+        const cta = page.locator('a:has-text("Apply"), button:has-text("Apply"):not([type="submit"])').first()
+        if ((await cta.count()) > 0) await cta.click({ timeout: 3000 }).catch(() => {})
+      }
+    } catch {}
+    await page.waitForTimeout(500)
+  }
+  return null
+}
+
 const locate = (frame: Frame, name: string) => {
   const byId = frame.locator(`[id="${name}"]`)
   return { byId, fallback: frame.locator(`[name="${name}"]`) }

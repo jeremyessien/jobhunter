@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url'
 import { resolve, join } from 'node:path'
 import { writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { applyFillPlan, formTarget, highlightNeedsYou } from '../src/browser'
+import { applyFillPlan, findForm, formTarget, highlightNeedsYou, looksLikeSecurityWall } from '../src/browser'
 
 const fixtureUrl = (name: string) => pathToFileURL(resolve(__dirname, 'fixtures', name)).href
 
@@ -96,6 +96,45 @@ describe('applyFillPlan', () => {
       needsYou: [],
     })
     expect(page.url()).toContain('combo-form.html')
+  })
+})
+
+describe('looksLikeSecurityWall', () => {
+  it('recognizes cloudflare-style challenge pages', () => {
+    expect(looksLikeSecurityWall('Just a moment...', 'Performing security verification')).toBe(true)
+    expect(looksLikeSecurityWall('Attention Required! | Cloudflare', '')).toBe(true)
+    expect(looksLikeSecurityWall('Careers', 'verify you are human to continue')).toBe(true)
+  })
+  it('does not flag normal job pages', () => {
+    expect(looksLikeSecurityWall('Job Application for Staff Product Designer at Twilio', 'Apply for this role')).toBe(false)
+  })
+})
+
+describe('findForm', () => {
+  it('finds an immediately-present form without clicking anything', async () => {
+    await page.goto(fixtureUrl('greenhouse-form.html'))
+    const target = await findForm(page, { timeoutMs: 5000, log: () => {} })
+    expect(target).not.toBeNull()
+  })
+  it('clicks an Apply control to reveal a hidden form', async () => {
+    await page.goto(fixtureUrl('apply-gate.html'))
+    const target = await findForm(page, { timeoutMs: 8000, applyClickAfterMs: 1000, log: () => {} })
+    expect(target).not.toBeNull()
+    expect(await target!.locator('#first_name').count()).toBe(1)
+  })
+  it('gives up quietly when no form ever appears', async () => {
+    await page.setContent('<h1>Nothing here</h1>')
+    const target = await findForm(page, { timeoutMs: 1500, log: () => {} })
+    expect(target).toBeNull()
+  })
+  it('reports a security wall through the log callback', async () => {
+    await page.setContent('<p>Performing security verification</p>')
+    await page.evaluate(() => {
+      document.title = 'Just a moment...'
+    })
+    const messages: string[] = []
+    await findForm(page, { timeoutMs: 1500, wallGraceMs: 200, log: (m) => messages.push(m) })
+    expect(messages.some((m) => m.includes('checking'))).toBe(true)
   })
 })
 

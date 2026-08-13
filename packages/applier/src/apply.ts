@@ -6,9 +6,10 @@ import { createInterface } from 'node:readline/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
 import type { Page } from 'playwright'
+import type { Frame } from 'playwright'
 import { fetchGreenhouseSchema, parseGreenhouseUrl } from './questions'
 import { buildFillPlan, type ApplicantFacts } from './plan'
-import { launchSession, formTarget, applyFillPlan, highlightNeedsYou } from './browser'
+import { launchSession, findForm, applyFillPlan, highlightNeedsYou } from './browser'
 import { confirmationSeen, decideOutcome, type WaitOutcome } from './confirm'
 import { markSubmitted, cooldownBlocked, screenshotPath } from './record'
 
@@ -76,41 +77,45 @@ async function applicantFacts(db: Client): Promise<ApplicantFacts | null> {
   }
 }
 
-async function waitForForm(page: Page, timeoutMs = 30000) {
-  const deadline = Date.now() + timeoutMs
-  while (Date.now() < deadline) {
-    const target = await formTarget(page)
-    if (target) return target
-    await page.waitForTimeout(500)
-  }
-  return null
-}
-
 async function waitForOutcome(page: Page, rl: ReturnType<typeof createInterface>): Promise<WaitOutcome> {
   const ac = new AbortController()
-  const prompt = rl
-    .question('  when done: [s] I submitted it  [k] skip for now  [x] I did not apply — your choice: ', { signal: ac.signal })
-    .then((answer) => ({ kind: 'key' as const, answer }))
-    .catch(() => ({ kind: 'aborted' as const }))
-  while (true) {
-    const tick = new Promise<{ kind: 'tick' }>((r) => setTimeout(() => r({ kind: 'tick' }), 1500))
-    const raced = await Promise.race([prompt, tick])
-    if (raced.kind === 'key') {
-      const outcome = decideOutcome(raced.answer.trim().toLowerCase())
+  let stopWatching = () => {}
+
+  const watcher = new Promise<WaitOutcome>((resolve) => {
+    const check = () => {
+      try {
+        if (confirmationSeen(page.frames().map((f) => f.url()))) resolve('confirmed')
+      } catch {
+        resolve('skip')
+      }
+    }
+    const onClose = () => resolve('skip')
+    page.on('framenavigated', check)
+    page.once('close', onClose)
+    stopWatching = () => {
+      page.off('framenavigated', check)
+      page.off('close', onClose)
+    }
+    check()
+  })
+
+  const askLoop = async (): Promise<WaitOutcome> => {
+    while (true) {
+      const answer = await rl.question(
+        '  when done: [s] I submitted it  [k] skip for now  [x] I did not apply — your choice: ',
+        { signal: ac.signal },
+      )
+      const outcome = decideOutcome(answer.trim().toLowerCase())
       if (outcome) return outcome
       console.log('  please answer s, k, or x')
-      return waitForOutcome(page, rl)
     }
-    if (raced.kind === 'aborted') return 'confirmed'
-    try {
-      if (confirmationSeen(page.frames().map((f) => f.url()))) {
-        ac.abort()
-        return 'confirmed'
-      }
-    } catch {
-      ac.abort()
-      return 'skip'
-    }
+  }
+
+  try {
+    return await Promise.race([watcher, askLoop().catch(() => watcher)])
+  } finally {
+    ac.abort()
+    stopWatching()
   }
 }
 
@@ -167,14 +172,15 @@ export async function runApply(db: Client, config: Config): Promise<void> {
 
       if (gh) {
         const hostedUrl = `https://job-boards.greenhouse.io/${gh.slug}/jobs/${gh.id}`
-        let opened = await openPage(page, hostedUrl)
-        if (opened) {
-          await page.waitForTimeout(2500)
-          if (!page.url().includes('greenhouse.io')) opened = await openPage(page, job.applyUrl)
-        } else {
-          opened = await openPage(page, job.applyUrl)
+        let target: Frame | null = null
+        if (await openPage(page, hostedUrl)) {
+          target = await findForm(page, { timeoutMs: 30000, log: console.log })
         }
-        const target = opened ? await waitForForm(page) : null
+        if (!target && !page.url().includes('greenhouse.io') && page.url() !== job.applyUrl) {
+          if (await openPage(page, job.applyUrl)) {
+            target = await findForm(page, { timeoutMs: 45000, log: console.log })
+          }
+        }
         const schema = target ? await fetchGreenhouseSchema(fetchJson, gh.slug, gh.id) : null
         if (target && schema) {
           const plan = buildFillPlan(schema, { coverLetter: job.coverLetter, answers: job.answers }, facts, config.resumePath)
