@@ -25,10 +25,12 @@ export function looksLikeSecurityWall(title: string, bodyText: string): boolean 
   return WALL_PATTERNS.test(title) || WALL_PATTERNS.test(bodyText)
 }
 
+export type FoundForm = { page: Page; frame: Frame }
+
 export async function findForm(
   page: Page,
   opts: { timeoutMs: number; applyClickAfterMs?: number; wallGraceMs?: number; log: (message: string) => void },
-): Promise<Frame | null> {
+): Promise<FoundForm | null> {
   const applyClickAfterMs = opts.applyClickAfterMs ?? 4000
   const started = Date.now()
   let deadline = started + opts.timeoutMs
@@ -36,8 +38,10 @@ export async function findForm(
   let applyClicked = false
 
   while (Date.now() < deadline) {
-    const target = await formTarget(page)
-    if (target) return target
+    for (const candidate of page.context().pages()) {
+      const frame = await formTarget(candidate)
+      if (frame) return { page: candidate, frame }
+    }
     try {
       const title = await page.title()
       const body = await page.evaluate(() => document.body?.innerText.slice(0, 600) ?? '')
@@ -117,6 +121,8 @@ export async function applyFillPlan(frame: Frame, plan: FillPlan): Promise<{ app
 
 export async function highlightNeedsYou(frame: Frame, items: NeedsYou[]): Promise<void> {
   if (items.length === 0) return
+  // The callback is serialized into the page, where tsx's injected __name
+  // helper does not exist — no inner function definitions allowed here.
   await frame.evaluate((needs) => {
     const style = document.createElement('style')
     style.textContent =
@@ -124,13 +130,17 @@ export async function highlightNeedsYou(frame: Frame, items: NeedsYou[]): Promis
       '#jh-needs-you-banner { position: fixed; top: 8px; right: 8px; z-index: 99999; background: #1c1917; color: #ffc25e;' +
       ' padding: 10px 14px; border-radius: 8px; font: 13px/1.5 system-ui; max-width: 320px; }'
     document.head.appendChild(style)
-    const normalize = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase()
     const unplaced: string[] = []
     for (const item of needs) {
-      const label = [...document.querySelectorAll('label, legend')].find((el) =>
-        normalize(el.textContent ?? '').startsWith(normalize(item.label)),
-      )
-      const container = label?.closest('div, fieldset') ?? label
+      const wanted = item.label.trim().replace(/\s+/g, ' ').toLowerCase()
+      let container: Element | null = null
+      for (const el of document.querySelectorAll('label, legend')) {
+        const text = (el.textContent ?? '').trim().replace(/\s+/g, ' ').toLowerCase()
+        if (text.startsWith(wanted)) {
+          container = el.closest('div, fieldset') ?? el
+          break
+        }
+      }
       if (container) container.classList.add('jh-needs-you')
       else unplaced.push(item.label)
     }

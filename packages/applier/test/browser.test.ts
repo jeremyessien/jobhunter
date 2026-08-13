@@ -113,19 +113,30 @@ describe('looksLikeSecurityWall', () => {
 describe('findForm', () => {
   it('finds an immediately-present form without clicking anything', async () => {
     await page.goto(fixtureUrl('greenhouse-form.html'))
-    const target = await findForm(page, { timeoutMs: 5000, log: () => {} })
-    expect(target).not.toBeNull()
+    const found = await findForm(page, { timeoutMs: 5000, log: () => {} })
+    expect(found).not.toBeNull()
+    expect(found!.page === page).toBe(true)
   })
   it('clicks an Apply control to reveal a hidden form', async () => {
     await page.goto(fixtureUrl('apply-gate.html'))
-    const target = await findForm(page, { timeoutMs: 8000, applyClickAfterMs: 1000, log: () => {} })
-    expect(target).not.toBeNull()
-    expect(await target!.locator('#first_name').count()).toBe(1)
+    const found = await findForm(page, { timeoutMs: 8000, applyClickAfterMs: 1000, log: () => {} })
+    expect(found).not.toBeNull()
+    expect(await found!.frame.locator('#first_name').count()).toBe(1)
+  })
+  it('adopts a form that an Apply click opens in a new tab', async () => {
+    const context = await browser.newContext()
+    const tabPage = await context.newPage()
+    await tabPage.goto(fixtureUrl('apply-newtab.html'))
+    const found = await findForm(tabPage, { timeoutMs: 10000, applyClickAfterMs: 500, log: () => {} })
+    expect(found).not.toBeNull()
+    expect(found!.page === tabPage).toBe(false)
+    expect(await found!.frame.locator('#first_name').count()).toBe(1)
+    await context.close()
   })
   it('gives up quietly when no form ever appears', async () => {
     await page.setContent('<h1>Nothing here</h1>')
-    const target = await findForm(page, { timeoutMs: 1500, log: () => {} })
-    expect(target).toBeNull()
+    const found = await findForm(page, { timeoutMs: 1500, log: () => {} })
+    expect(found).toBeNull()
   })
   it('reports a security wall through the log callback', async () => {
     await page.setContent('<p>Performing security verification</p>')
