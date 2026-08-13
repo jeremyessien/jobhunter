@@ -16,6 +16,7 @@ export const configSchema = z.object({
   draftCapPerHunt: z.number().int().positive().default(10),
   queueThreshold: z.number().int().min(1).max(10).default(7),
   companyCooldownDays: z.number().int().positive().default(14),
+  resumePath: z.string().optional(),
   blocklist: z.array(z.string()).default([]),
   lanes: z.array(laneSchema).nonempty(),
   remoteExcludePatterns: z
