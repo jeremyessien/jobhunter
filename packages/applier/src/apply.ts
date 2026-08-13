@@ -6,10 +6,9 @@ import { createInterface } from 'node:readline/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
 import type { Page } from 'playwright'
-import type { Frame } from 'playwright'
 import { fetchGreenhouseSchema, parseGreenhouseUrl } from './questions'
 import { buildFillPlan, type ApplicantFacts } from './plan'
-import { launchSession, findForm, applyFillPlan, highlightNeedsYou } from './browser'
+import { launchSession, findForm, applyFillPlan, highlightNeedsYou, type FoundForm } from './browser'
 import { confirmationSeen, decideOutcome, type WaitOutcome } from './confirm'
 import { markSubmitted, cooldownBlocked, screenshotPath } from './record'
 
@@ -168,48 +167,58 @@ export async function runApply(db: Client, config: Config): Promise<void> {
       }
       const page = await session.context.newPage()
       const gh = await resolveGreenhouse(db, job)
-      let assisted = true
+      let found: FoundForm | null = null
+      let fillSucceeded = false
 
       if (gh) {
         const hostedUrl = `https://job-boards.greenhouse.io/${gh.slug}/jobs/${gh.id}`
-        let target: Frame | null = null
+        const embedUrl = `https://job-boards.greenhouse.io/embed/job_app?for=${gh.slug}&token=${gh.id}`
         if (await openPage(page, hostedUrl)) {
-          target = await findForm(page, { timeoutMs: 30000, log: console.log })
+          found = await findForm(page, { timeoutMs: 20000, log: console.log })
         }
-        if (!target && !page.url().includes('greenhouse.io') && page.url() !== job.applyUrl) {
-          if (await openPage(page, job.applyUrl)) {
-            target = await findForm(page, { timeoutMs: 45000, log: console.log })
+        if (!found && (await openPage(page, embedUrl))) {
+          found = await findForm(page, { timeoutMs: 20000, log: console.log })
+        }
+        if (!found && page.url() !== job.applyUrl && (await openPage(page, job.applyUrl))) {
+          found = await findForm(page, { timeoutMs: 45000, log: console.log })
+        }
+        const schema = found ? await fetchGreenhouseSchema(fetchJson, gh.slug, gh.id) : null
+        if (found && schema) {
+          try {
+            const plan = buildFillPlan(schema, { coverLetter: job.coverLetter, answers: job.answers }, facts, config.resumePath)
+            const { applied, failed } = await applyFillPlan(found.frame, plan)
+            const needsYou = [...plan.needsYou, ...failed]
+            await highlightNeedsYou(found.frame, needsYou).catch(() => {
+              console.log('  (could not draw the highlights — the list below still applies)')
+            })
+            console.log(`  filled ${applied} field(s)` + (needsYou.length ? `, ${needsYou.length} need(s) you:` : ''))
+            for (const item of needsYou) console.log(`    - ${item.label}: ${item.reason}`)
+            await found.frame
+              .locator('button[type="submit"], input[type="submit"]')
+              .first()
+              .scrollIntoViewIfNeeded()
+              .catch(() => {})
+            console.log('  review the form in the browser, then click Submit yourself')
+            fillSucceeded = true
+          } catch (err) {
+            console.log(`  something went wrong while filling (${err instanceof Error ? err.message.slice(0, 80) : 'unknown'})`)
+            console.log('  the page stays open — finish it by hand with your drafts below')
           }
-        }
-        const schema = target ? await fetchGreenhouseSchema(fetchJson, gh.slug, gh.id) : null
-        if (target && schema) {
-          const plan = buildFillPlan(schema, { coverLetter: job.coverLetter, answers: job.answers }, facts, config.resumePath)
-          const { applied, failed } = await applyFillPlan(target, plan)
-          const needsYou = [...plan.needsYou, ...failed]
-          await highlightNeedsYou(target, needsYou)
-          console.log(`  filled ${applied} field(s)` + (needsYou.length ? `, ${needsYou.length} need(s) you:` : ''))
-          for (const item of needsYou) console.log(`    - ${item.label}: ${item.reason}`)
-          await target
-            .locator('button[type="submit"], input[type="submit"]')
-            .first()
-            .scrollIntoViewIfNeeded()
-            .catch(() => {})
-          console.log('  review the form in the browser, then click Submit yourself')
-          assisted = false
         }
       }
 
-      if (assisted) {
-        if (!page.url().startsWith('http')) await openPage(page, job.applyUrl)
-        console.log('  this site is not one I can fill — your drafts, for copy-paste:')
+      if (!fillSucceeded) {
+        if (!found && !page.url().startsWith('http')) await openPage(page, job.applyUrl)
+        if (!found) console.log('  this site is not one I can fill — your drafts, for copy-paste:')
         if (job.coverLetter) console.log(`\n--- cover letter ---\n${job.coverLetter}\n`)
         for (const a of job.answers) console.log(`Q: ${a.question}\nA: ${a.answer}\n`)
       }
 
-      const outcome = await waitForOutcome(page, rl)
+      const activePage = found?.page ?? page
+      const outcome = await waitForOutcome(activePage, rl)
       if (outcome === 'confirmed' || outcome === 'user-submitted') {
         await markSubmitted(db, job.id, new Date().toISOString())
-        await page
+        await activePage
           .screenshot({ path: screenshotPath(sessionDir, job.id, outcome === 'confirmed' ? 'confirm' : 'manual'), fullPage: true })
           .catch(() => {})
         console.log(`  marked as submitted ✓ (screenshot in ${sessionDir})\n`)
@@ -218,6 +227,7 @@ export async function runApply(db: Client, config: Config): Promise<void> {
         console.log(outcome === 'skip' ? '  left for a later session\n' : '  kept as approved — you did not apply\n')
         skipped++
       }
+      if (activePage !== page) await activePage.close().catch(() => {})
       await page.close().catch(() => {})
     }
   } finally {
