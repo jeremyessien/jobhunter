@@ -86,6 +86,9 @@ importers:
 
   packages/hunter:
     dependencies:
+      '@jobhunter/applier':
+        specifier: workspace:*
+        version: link:../applier
       '@jobhunter/core':
         specifier: workspace:*
         version: link:../core

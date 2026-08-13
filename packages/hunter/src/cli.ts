@@ -50,6 +50,11 @@ switch (command) {
     console.log(`draft: ${res.drafted} drafted, ${res.manual} manual, ${res.deferred} deferred`)
     break
   }
+  case 'apply': {
+    const { runApply } = await import('@jobhunter/applier')
+    await runApply(db, config)
+    break
+  }
   default:
-    console.log('usage: jobhunter <hunt|parse-resume|seed-companies|queue|draft>')
+    console.log('usage: jobhunter <hunt|parse-resume|seed-companies|queue|draft|apply>')
 }

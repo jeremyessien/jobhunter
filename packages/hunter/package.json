@@ -3,6 +3,7 @@
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {
+    "@jobhunter/applier": "workspace:*",
     "@jobhunter/core": "workspace:*",
     "zod": "^3.24.0"
   },
