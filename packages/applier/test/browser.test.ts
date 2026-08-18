@@ -14,6 +14,7 @@ let page: Page
 beforeAll(async () => {
   browser = await chromium.launch({ channel: 'chrome' })
   page = await browser.newPage()
+  await page.goto(fixtureUrl('greenhouse-form.html'))
 })
 afterAll(async () => {
   await browser.close()

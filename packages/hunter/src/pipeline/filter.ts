@@ -14,10 +14,12 @@ const anyMatch = (patterns: string[], text: string) =>
 
 export function matchLane(job: FilterableJob, config: Config): string | null {
   if (config.blocklist.some((b) => job.company.toLowerCase().includes(b.toLowerCase()))) return null
+  if (anyMatch(config.excludeTitlePatterns, job.title)) return null
   const haystack = `${job.location ?? ''} ${job.description}`
   for (const lane of config.lanes) {
     if (!anyMatch(lane.titlePatterns, job.title)) continue
-    if (!anyMatch(lane.seniorityPatterns, job.title)) continue
+    // an empty seniorityPatterns list means the lane accepts any level above the exclude list
+    if (lane.seniorityPatterns.length > 0 && !anyMatch(lane.seniorityPatterns, job.title)) continue
     switch (lane.rule) {
       case 'remote': {
         const isRemote = job.remote === 1 || /remote/i.test(job.location ?? '')
@@ -25,7 +27,11 @@ export function matchLane(job: FilterableJob, config: Config): string | null {
         break
       }
       case 'visa':
-        if (anyMatch(config.visaPatterns, job.description)) return lane.id
+        if (
+          anyMatch(config.visaPatterns, job.description) ||
+          anyMatch(config.visaFriendlyLocations, job.location ?? '')
+        )
+          return lane.id
         break
       case 'nigeria':
         if (/nigeria|lagos|abuja/i.test(job.location ?? '')) return lane.id

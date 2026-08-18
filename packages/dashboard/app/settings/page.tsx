@@ -1,8 +1,8 @@
-import { getDb, getConfig, configPath } from '../../lib/db'
+import { getDb, getConfig } from '../../lib/db'
 import { getProfile } from '@jobhunter/hunter'
-import { readFileSync } from 'node:fs'
-import { saveScreening, saveConfig } from './actions'
+import { saveScreening, saveVoice, saveConfig } from './actions'
 import { Nav } from '../nav'
+import { requireSession } from '../../lib/session'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,11 +11,12 @@ export default async function SettingsPage({
 }: {
   searchParams: Promise<{ saved?: string; error?: string }>
 }) {
+  await requireSession()
   const { saved, error } = await searchParams
   const db = await getDb()
   const profile = await getProfile(db)
-  const config = getConfig()
-  const configText = readFileSync(configPath, 'utf8')
+  const config = await getConfig()
+  const configText = JSON.stringify(config, null, 2)
   const screening = profile?.screening ?? {}
   return (
     <>
@@ -70,6 +71,35 @@ export default async function SettingsPage({
             ))}
             <div className="actions">
               <button className="primary">Save screening</button>
+            </div>
+          </form>
+        )}
+
+        <h2 className="section-title">Your voice</h2>
+        <p className="desc">
+          Paste two or three paragraphs you actually wrote — a Slack message, an old cover letter, a pull request
+          description. Drafts copy its rhythm, never its content. Leave this blank and drafts fall back to a neutral
+          house style.
+        </p>
+        {profile && (
+          <form action={saveVoice} className="card">
+            <label className="field-label" htmlFor="voiceSample">Writing sample</label>
+            <textarea
+              id="voiceSample"
+              name="voiceSample"
+              defaultValue={profile.voiceSample ?? ''}
+              style={{ minHeight: '12rem' }}
+            />
+            <label className="field-label" htmlFor="voiceNotes">Anything else about how you write (optional)</label>
+            <input
+              type="text"
+              id="voiceNotes"
+              name="voiceNotes"
+              defaultValue={profile.voiceNotes ?? ''}
+              placeholder="e.g. never open with a question"
+            />
+            <div className="actions">
+              <button className="primary">Save voice</button>
             </div>
           </form>
         )}

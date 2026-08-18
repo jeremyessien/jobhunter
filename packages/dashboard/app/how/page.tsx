@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { getConfig } from '../../lib/db'
 import { Nav } from '../nav'
+import { requireSession } from '../../lib/session'
 
 export const dynamic = 'force-dynamic'
 
-export default function HowPage() {
-  const bar = getConfig().queueThreshold
+export default async function HowPage() {
+  await requireSession()
+  const bar = (await getConfig()).queueThreshold
   return (
     <>
       <Nav active="how" />
@@ -29,8 +31,12 @@ export default function HowPage() {
             — they cannot invent numbers.
           </li>
           <li>
-            <strong>Decide.</strong> Open a job in Review. Read the draft, edit anything, then Approve (you plan to
-            apply), Skip (never see it again), or Snooze (hide it for a few days).
+            <strong>Decide.</strong> Review splits in two. A draft is <em>ready</em> when it passed the writing checks
+            and every screening question was answerable from your profile — those group together under one
+            &ldquo;Approve all&rdquo; button, so you never open them one by one. Everything else lands under
+            &ldquo;Needs you&rdquo; with the reason on the card: a question your profile could not answer, or a draft
+            the checks rejected. Open those, fix them, then Approve (you plan to apply), Skip (never see it again), or
+            Snooze (hide it for a few days). Approving never submits anything.
           </li>
           <li>
             <strong>Apply.</strong> Run <code>pnpm jobhunter apply</code> — it opens each approved job&apos;s form in a

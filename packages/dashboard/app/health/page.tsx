@@ -2,10 +2,12 @@ import { getDb } from '../../lib/db'
 import { sourceHealth } from '../../lib/data'
 import { Nav } from '../nav'
 import { timeAgo } from '../format'
+import { requireSession } from '../../lib/session'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HealthPage() {
+  await requireSession()
   const db = await getDb()
   const sources = await sourceHealth(db)
   const lastHunt = sources.map((s) => s.lastRun).sort().at(-1)

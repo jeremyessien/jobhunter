@@ -1,9 +1,77 @@
 {
   "lanes": [
-    { "id": "remote-mobile", "titlePatterns": ["flutter", "mobile engineer", "mobile developer", "ios", "android", "react native"], "rule": "remote" },
-    { "id": "remote-frontend", "titlePatterns": ["frontend", "front[- ]end", "full[- ]?stack", "react", "next\\.?js"], "rule": "remote" },
-    { "id": "visa-anywhere", "titlePatterns": ["flutter", "mobile", "frontend", "full[- ]?stack", "react"], "rule": "visa" },
-    { "id": "nigeria-local", "titlePatterns": ["flutter", "mobile", "frontend", "full[- ]?stack", "react", "software engineer"], "rule": "nigeria" }
+    {
+      "id": "remote-mobile",
+      "titlePatterns": [
+        "flutter",
+        "dart",
+        "mobile",
+        "ios",
+        "android",
+        "react native",
+        "cross[- ]?platform"
+      ],
+      "rule": "remote",
+      "seniorityPatterns": []
+    },
+    {
+      "id": "remote-frontend",
+      "titlePatterns": [
+        "frontend",
+        "front[- ]end",
+        "full[- ]?stack",
+        "react",
+        "next\\.?js",
+        "typescript",
+        "web engineer"
+      ],
+      "rule": "remote",
+      "seniorityPatterns": []
+    },
+    {
+      "id": "visa-anywhere",
+      "titlePatterns": [
+        "flutter",
+        "dart",
+        "mobile",
+        "ios",
+        "android",
+        "react native",
+        "cross[- ]?platform",
+        "frontend",
+        "front[- ]end",
+        "full[- ]?stack",
+        "react",
+        "next\\.?js",
+        "typescript",
+        "web engineer"
+      ],
+      "rule": "visa",
+      "seniorityPatterns": []
+    },
+    {
+      "id": "nigeria-local",
+      "titlePatterns": [
+        "flutter",
+        "dart",
+        "mobile",
+        "ios",
+        "android",
+        "react native",
+        "cross[- ]?platform",
+        "frontend",
+        "front[- ]end",
+        "full[- ]?stack",
+        "react",
+        "next\\.?js",
+        "typescript",
+        "web engineer",
+        "software engineer",
+        "software developer"
+      ],
+      "rule": "nigeria",
+      "seniorityPatterns": []
+    }
   ],
   "blocklist": [],
   "queueThreshold": 6,

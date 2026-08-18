@@ -1,5 +1,6 @@
 import type { Client } from '@libsql/client'
 import { styleLint, factLock, getProfile } from '@jobhunter/hunter'
+import { queueJobs } from './data'
 
 async function transition(db: Client, id: number, fromStatuses: string[], to: string, extra = '', args: unknown[] = []) {
   const placeholders = fromStatuses.map(() => '?').join(',')
@@ -17,6 +18,15 @@ export const markSubmitted = (db: Client, id: number, nowIso: string) =>
 export const tagResponded = (db: Client, id: number, nowIso: string) =>
   transition(db, id, ['submitted'], 'responded', ', responded_at=?', [nowIso])
 export const tagRejected = (db: Client, id: number) => transition(db, id, ['submitted'], 'rejected')
+
+export async function approveAllReady(db: Client, nowIso: string): Promise<number> {
+  const ready = (await queueJobs(db, nowIso)).filter((j) => j.ready)
+  let approved = 0
+  for (const job of ready) {
+    if (await approveJob(db, job.id)) approved++
+  }
+  return approved
+}
 
 export async function snoozeJob(db: Client, id: number, days: number, nowIso: string) {
   const until = new Date(Date.parse(nowIso) + days * 86_400_000).toISOString()

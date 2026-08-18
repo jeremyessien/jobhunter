@@ -3,6 +3,7 @@ import { trackerJobs, laneStats } from '../../lib/data'
 import { respond, reject } from './actions'
 import { Nav } from '../nav'
 import { timeAgo } from '../format'
+import { requireSession } from '../../lib/session'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +14,7 @@ const statusChip: Record<string, string> = {
 }
 
 export default async function TrackerPage() {
+  await requireSession()
   const db = await getDb()
   const [jobs, stats] = await Promise.all([trackerJobs(db), laneStats(db)])
   const responded = jobs.filter((j) => j.status === 'responded').length

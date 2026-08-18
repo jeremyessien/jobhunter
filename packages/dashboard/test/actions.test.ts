@@ -3,7 +3,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { openDb } from '@jobhunter/core'
-import { approveJob, skipJob, snoozeJob, markSubmitted, tagResponded, tagRejected, saveDraft } from '../lib/actions.js'
+import { approveJob, approveAllReady, skipJob, snoozeJob, markSubmitted, tagResponded, tagRejected, saveDraft } from '../lib/actions.js'
 
 const NOW = '2026-08-12T09:00:00Z'
 const tmpDb = () => openDb('file:' + join(mkdtempSync(join(tmpdir(), 'jh-')), 't.db'))
@@ -93,5 +93,57 @@ describe('saveDraft', () => {
     const id = await seed(db)
     const warnings = await saveDraft(db, id, 'Your 11.4s to 2.1s budget matches my experience.', [])
     expect(warnings).toEqual([])
+  })
+})
+
+const withDraft = async (
+  db: Awaited<ReturnType<typeof tmpDb>>,
+  flag: string | null,
+  gaps: boolean[],
+  extra: Record<string, unknown> = {},
+) => {
+  const id = await seed(db)
+  await db.execute({
+    sql: 'UPDATE jobs SET draft_flag=?, answers_json=?, snoozed_until=? WHERE id=?',
+    args: [
+      flag,
+      JSON.stringify(gaps.map((g, i) => ({ question: `q${i}`, answer: `a${i}`, needs_you: g }))),
+      (extra.snoozed_until as string) ?? null,
+      id,
+    ],
+  })
+  return id
+}
+
+describe('approveAllReady', () => {
+  it('approves ready jobs and leaves everything else queued', async () => {
+    const db = await tmpDb()
+    const ready = await withDraft(db, 'drafted', [false, false])
+    const gap = await withDraft(db, 'drafted', [false, true])
+    const manual = await withDraft(db, 'manual', [false])
+
+    expect(await approveAllReady(db, NOW)).toBe(1)
+    expect(await status(db, ready)).toBe('approved')
+    expect(await status(db, gap)).toBe('queued')
+    expect(await status(db, manual)).toBe('queued')
+  })
+
+  it('skips snoozed jobs even when their draft is clean', async () => {
+    const db = await tmpDb()
+    await withDraft(db, 'drafted', [false], { snoozed_until: '2026-09-01T00:00:00Z' })
+    expect(await approveAllReady(db, NOW)).toBe(0)
+  })
+
+  it('returns zero when nothing is ready', async () => {
+    const db = await tmpDb()
+    await withDraft(db, 'manual', [false])
+    expect(await approveAllReady(db, NOW)).toBe(0)
+  })
+
+  it('is idempotent - a second sweep approves nothing more', async () => {
+    const db = await tmpDb()
+    await withDraft(db, 'drafted', [false])
+    expect(await approveAllReady(db, NOW)).toBe(1)
+    expect(await approveAllReady(db, NOW)).toBe(0)
   })
 })

@@ -1,16 +1,16 @@
 import type { Client } from '@libsql/client'
 import type { Config } from '@jobhunter/core'
-import { makeThrottledFetch } from '@jobhunter/core'
+import { makeThrottledFetch, resolveGreenhouseRef, checkPosting } from '@jobhunter/core'
 import { existsSync, mkdirSync } from 'node:fs'
 import { createInterface } from 'node:readline/promises'
 import { join } from 'node:path'
 import { z } from 'zod'
 import type { Page } from 'playwright'
-import { fetchGreenhouseSchema, parseGreenhouseUrl } from './questions'
+import { fetchGreenhouseSchema } from './questions'
 import { buildFillPlan, type ApplicantFacts } from './plan'
 import { launchSession, findForm, applyFillPlan, highlightNeedsYou, type FoundForm } from './browser'
 import { confirmationSeen, decideOutcome, type WaitOutcome } from './confirm'
-import { markSubmitted, cooldownBlocked, screenshotPath } from './record'
+import { markSubmitted, markExpired, cooldownBlocked, screenshotPath } from './record'
 
 export type ApplyJob = {
   id: number
@@ -45,16 +45,7 @@ export async function approvedJobs(db: Client): Promise<ApplyJob[]> {
 }
 
 export async function resolveGreenhouse(db: Client, job: ApplyJob): Promise<{ slug: string; id: string } | null> {
-  const fromUrl = parseGreenhouseUrl(job.applyUrl)
-  if (fromUrl) return fromUrl
-  const keyMatch = /^greenhouse:(\d+)$/.exec(job.externalKey)
-  if (!keyMatch) return null
-  const rs = await db.execute({
-    sql: "SELECT slug FROM companies WHERE ats='greenhouse' AND lower(name)=lower(?) LIMIT 1",
-    args: [job.company],
-  })
-  const slug = rs.rows[0]?.slug
-  return slug ? { slug: String(slug), id: keyMatch[1] } : null
+  return resolveGreenhouseRef(db, { applyUrl: job.applyUrl, externalKey: job.externalKey, company: job.company })
 }
 
 const factsSchema = z.object({
@@ -162,6 +153,12 @@ export async function runApply(db: Client, config: Config): Promise<void> {
       console.log(`[${index + 1}/${jobs.length}] ${job.title} · ${job.company}`)
       if (await cooldownBlocked(db, job.company, new Date().toISOString(), config.companyCooldownDays)) {
         console.log(`  skipped: you already applied to ${job.company} in the last ${config.companyCooldownDays} days\n`)
+        skipped++
+        continue
+      }
+      if ((await checkPosting(job.applyUrl)) === 'gone') {
+        await markExpired(db, job.id)
+        console.log('  skipped: this posting is no longer live\n')
         skipped++
         continue
       }

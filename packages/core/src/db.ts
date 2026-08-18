@@ -49,6 +49,11 @@ const MIGRATIONS = [
     updated_at TEXT NOT NULL
   )`,
   `ALTER TABLE jobs ADD COLUMN snoozed_until TEXT`,
+  `CREATE TABLE config(
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    json TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
 ]
 
 export async function openDb(url: string, authToken?: string): Promise<Client> {

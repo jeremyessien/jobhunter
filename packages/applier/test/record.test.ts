@@ -3,7 +3,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { openDb } from '@jobhunter/core'
-import { markSubmitted, cooldownBlocked, screenshotPath } from '../src/record'
+import { markSubmitted, markExpired, cooldownBlocked, screenshotPath } from '../src/record'
 
 const NOW = '2026-08-13T12:00:00Z'
 const tmpDb = () => openDb('file:' + join(mkdtempSync(join(tmpdir(), 'jh-')), 't.db'))
@@ -59,5 +59,22 @@ describe('cooldownBlocked', () => {
 describe('screenshotPath', () => {
   it('builds a per-job path inside the session dir', () => {
     expect(screenshotPath('applier-sessions/2026-08-13', 42, 'confirm')).toBe('applier-sessions/2026-08-13/42-confirm.png')
+  })
+})
+describe('markExpired', () => {
+  it('takes an approved job out of the queue', async () => {
+    const db = await tmpDb()
+    const id = await seed(db)
+    expect(await markExpired(db, id)).toBe(true)
+    const rs = await db.execute({ sql: 'SELECT status FROM jobs WHERE id=?', args: [id] })
+    expect(rs.rows[0].status).toBe('expired')
+  })
+
+  it('leaves a submitted job alone', async () => {
+    const db = await tmpDb()
+    const id = await seed(db, { status: 'submitted' })
+    expect(await markExpired(db, id)).toBe(false)
+    const rs = await db.execute({ sql: 'SELECT status FROM jobs WHERE id=?', args: [id] })
+    expect(rs.rows[0].status).toBe('submitted')
   })
 })

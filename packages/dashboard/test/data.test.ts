@@ -153,3 +153,65 @@ describe('queueOutlook', () => {
     expect(o).toEqual({ scoredCount: 0, bestScore: null, lastHuntAt: null })
   })
 })
+
+const answers = (...flags: boolean[]) =>
+  JSON.stringify(flags.map((f, i) => ({ question: `q${i}`, answer: `a${i}`, needs_you: f })))
+
+describe('queueJobs readiness', () => {
+  it('marks a gate-passing draft with no gaps as ready', async () => {
+    const db = await tmpDb()
+    await seed(db, { draft_flag: 'drafted', answers_json: answers(false, false) })
+    const [job] = await queueJobs(db, NOW)
+    expect(job.ready).toBe(true)
+    expect(job.needsYouCount).toBe(0)
+  })
+
+  it('is not ready when any answer needs him', async () => {
+    const db = await tmpDb()
+    await seed(db, { draft_flag: 'drafted', answers_json: answers(false, true) })
+    const [job] = await queueJobs(db, NOW)
+    expect(job.ready).toBe(false)
+    expect(job.needsYouCount).toBe(1)
+  })
+
+  it('is not ready when the draft was flagged manual', async () => {
+    const db = await tmpDb()
+    await seed(db, { draft_flag: 'manual', answers_json: answers(false) })
+    const [job] = await queueJobs(db, NOW)
+    expect(job.ready).toBe(false)
+  })
+
+  it('is not ready when there is no draft yet', async () => {
+    const db = await tmpDb()
+    await seed(db, { draft_flag: null, answers_json: null })
+    const [job] = await queueJobs(db, NOW)
+    expect(job.ready).toBe(false)
+    expect(job.needsYouCount).toBe(0)
+  })
+
+  it('treats a legacy draft with no needs_you key as ready', async () => {
+    const db = await tmpDb()
+    await seed(db, {
+      draft_flag: 'drafted',
+      answers_json: JSON.stringify([{ question: 'q', answer: 'a' }]),
+    })
+    const [job] = await queueJobs(db, NOW)
+    expect(job.ready).toBe(true)
+  })
+
+  it('survives malformed answers_json without throwing', async () => {
+    const db = await tmpDb()
+    await seed(db, { draft_flag: 'drafted', answers_json: '{not json' })
+    const [job] = await queueJobs(db, NOW)
+    expect(job.ready).toBe(true)
+    expect(job.needsYouCount).toBe(0)
+  })
+
+  it('exposes readiness on the job detail too', async () => {
+    const db = await tmpDb()
+    const id = await seed(db, { draft_flag: 'drafted', answers_json: answers(true) })
+    const job = await getJob(db, id)
+    expect(job?.ready).toBe(false)
+    expect(job?.needsYouCount).toBe(1)
+  })
+})

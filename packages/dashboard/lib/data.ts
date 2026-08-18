@@ -11,6 +11,8 @@ export type QueueItem = {
   strengths: { claim: string; evidence: string }[]
   gaps: string[]
   draftFlag: string | null
+  ready: boolean
+  needsYouCount: number
 }
 
 export type JobDetail = QueueItem & {
@@ -38,20 +40,35 @@ const parseScore = (raw: unknown): Pick<QueueItem, 'verdict' | 'strengths' | 'ga
   }
 }
 
-const toQueueItem = (r: Row): QueueItem => ({
-  id: Number(r.id),
-  score: r.score === null ? null : Number(r.score),
-  title: String(r.title),
-  company: String(r.company),
-  lane: r.lane === null ? null : String(r.lane),
-  applyUrl: String(r.apply_url),
-  draftFlag: r.draft_flag === null ? null : String(r.draft_flag),
-  ...parseScore(r.score_json),
-})
+const parseAnswers = (raw: unknown): { needs_you?: boolean }[] => {
+  try {
+    const parsed = JSON.parse(String(raw ?? ''))
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+const toQueueItem = (r: Row): QueueItem => {
+  const draftFlag = r.draft_flag === null ? null : String(r.draft_flag)
+  const needsYouCount = parseAnswers(r.answers_json).filter((a) => a.needs_you === true).length
+  return {
+    id: Number(r.id),
+    score: r.score === null ? null : Number(r.score),
+    title: String(r.title),
+    company: String(r.company),
+    lane: r.lane === null ? null : String(r.lane),
+    applyUrl: String(r.apply_url),
+    draftFlag,
+    needsYouCount,
+    ready: draftFlag === 'drafted' && needsYouCount === 0,
+    ...parseScore(r.score_json),
+  }
+}
 
 export async function queueJobs(db: Client, nowIso: string): Promise<QueueItem[]> {
   const rs = await db.execute({
-    sql: `SELECT id, score, title, company, lane, apply_url, draft_flag, score_json FROM jobs
+    sql: `SELECT id, score, title, company, lane, apply_url, draft_flag, score_json, answers_json FROM jobs
           WHERE status='queued' AND (snoozed_until IS NULL OR snoozed_until <= ?)
           ORDER BY score DESC, first_seen DESC`,
     args: [nowIso],
