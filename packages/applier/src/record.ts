@@ -9,6 +9,14 @@ export async function markSubmitted(db: Client, jobId: number, nowIso: string): 
   return rs.rowsAffected === 1
 }
 
+export async function markExpired(db: Client, jobId: number): Promise<boolean> {
+  const rs = await db.execute({
+    sql: "UPDATE jobs SET status='expired' WHERE id=? AND status='approved'",
+    args: [jobId],
+  })
+  return rs.rowsAffected === 1
+}
+
 export async function cooldownBlocked(db: Client, company: string, nowIso: string, days: number): Promise<boolean> {
   const rs = await db.execute({
     sql: `SELECT 1 FROM jobs WHERE lower(company)=lower(?) AND submitted_at IS NOT NULL

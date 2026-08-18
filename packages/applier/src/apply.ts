@@ -1,6 +1,6 @@
 import type { Client } from '@libsql/client'
 import type { Config } from '@jobhunter/core'
-import { makeThrottledFetch, resolveGreenhouseRef } from '@jobhunter/core'
+import { makeThrottledFetch, resolveGreenhouseRef, checkPosting } from '@jobhunter/core'
 import { existsSync, mkdirSync } from 'node:fs'
 import { createInterface } from 'node:readline/promises'
 import { join } from 'node:path'
@@ -10,7 +10,7 @@ import { fetchGreenhouseSchema } from './questions'
 import { buildFillPlan, type ApplicantFacts } from './plan'
 import { launchSession, findForm, applyFillPlan, highlightNeedsYou, type FoundForm } from './browser'
 import { confirmationSeen, decideOutcome, type WaitOutcome } from './confirm'
-import { markSubmitted, cooldownBlocked, screenshotPath } from './record'
+import { markSubmitted, markExpired, cooldownBlocked, screenshotPath } from './record'
 
 export type ApplyJob = {
   id: number
@@ -153,6 +153,12 @@ export async function runApply(db: Client, config: Config): Promise<void> {
       console.log(`[${index + 1}/${jobs.length}] ${job.title} · ${job.company}`)
       if (await cooldownBlocked(db, job.company, new Date().toISOString(), config.companyCooldownDays)) {
         console.log(`  skipped: you already applied to ${job.company} in the last ${config.companyCooldownDays} days\n`)
+        skipped++
+        continue
+      }
+      if ((await checkPosting(job.applyUrl)) === 'gone') {
+        await markExpired(db, job.id)
+        console.log('  skipped: this posting is no longer live\n')
         skipped++
         continue
       }
