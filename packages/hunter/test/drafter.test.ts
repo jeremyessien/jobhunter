@@ -26,7 +26,7 @@ const profile: Profile = {
 
 const cleanDraft: Draft = {
   cover_letter: "I rebuilt a bank's Flutter cold start from 11.4s to 2.1s. Your posting reads like the same class of problem, and I want to work on it.",
-  answers: [{ question: 'What is your notice period?', answer: 'My notice period is 30 days.' }],
+  answers: [{ question: 'What is your notice period?', answer: 'My notice period is 30 days.', needs_you: false }],
 }
 const styleViolatingDraft: Draft = {
   cover_letter: 'I am thrilled to leverage my skills — truly.',
@@ -38,7 +38,7 @@ const fabricatingDraft: Draft = {
 }
 const fabricatingAnswerDraft: Draft = {
   cover_letter: cleanDraft.cover_letter,
-  answers: [{ question: 'What is your notice period?', answer: 'I improved throughput by 82%.' }],
+  answers: [{ question: 'What is your notice period?', answer: 'I improved throughput by 82%.', needs_you: false }],
 }
 
 const tmpDb = () => openDb('file:' + join(mkdtempSync(join(tmpdir(), 'jh-')), 't.db'))
