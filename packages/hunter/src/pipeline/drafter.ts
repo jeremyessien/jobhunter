@@ -1,6 +1,6 @@
 import type { Client } from '@libsql/client'
 import { z } from 'zod'
-import type { Config, InvokeClaude } from '@jobhunter/core'
+import { resolveGreenhouseRef, type Config, type InvokeClaude } from '@jobhunter/core'
 import type { Profile } from '../profile'
 import { styleLint, BANNED_PHRASES } from '../draft/style'
 import { factLock } from '../draft/facts'
@@ -30,6 +30,7 @@ const VOICE_GUIDE = `Write like a real person, specifically like Jeremiah:
 
 type DraftableJob = {
   id: unknown
+  external_key: string
   title: string
   company: string
   description: string
@@ -86,7 +87,7 @@ export async function runDrafter(deps: {
 }): Promise<{ drafted: number; manual: number; deferred: number }> {
   const { db, config, profile, invoke, fetchJson } = deps
   const rs = await db.execute({
-    sql: `SELECT id, title, company, description, apply_url, source, lane FROM jobs
+    sql: `SELECT id, external_key, title, company, description, apply_url, source, lane FROM jobs
           WHERE status='queued' AND draft_flag IS NULL
           ORDER BY score DESC, first_seen DESC LIMIT ?`,
     args: [config.draftCapPerHunt],
@@ -94,10 +95,15 @@ export async function runDrafter(deps: {
   let drafted = 0, manual = 0, deferred = 0
   for (const row of rs.rows) {
     const job = row as unknown as DraftableJob
-    const questions =
-      job.source === 'greenhouse'
-        ? ((await fetchGreenhouseQuestions(fetchJson, job.apply_url)) ?? PREDICTED_QUESTIONS)
-        : PREDICTED_QUESTIONS
+    let questions: readonly string[] = PREDICTED_QUESTIONS
+    if (job.source === 'greenhouse') {
+      const ref = await resolveGreenhouseRef(db, {
+        applyUrl: job.apply_url,
+        externalKey: job.external_key,
+        company: job.company,
+      })
+      if (ref) questions = (await fetchGreenhouseQuestions(fetchJson, ref.slug, ref.id)) ?? PREDICTED_QUESTIONS
+    }
     const basePrompt = draftPrompt(profile, job, questions)
     try {
       let draft = await invoke({ prompt: basePrompt, model: 'sonnet', schema: draftSchema, claudeBin: config.claudeBin })
