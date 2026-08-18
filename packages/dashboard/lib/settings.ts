@@ -2,20 +2,25 @@ import type { Client } from '@libsql/client'
 import { configSchema } from '@jobhunter/core'
 import { profileSchema, type Profile } from '@jobhunter/hunter'
 
-export async function updateScreening(db: Client, patch: Partial<Profile['screening']>): Promise<Profile> {
+async function patchProfile(db: Client, patch: (current: Profile) => Profile): Promise<Profile> {
   const rs = await db.execute('SELECT json FROM profile WHERE id=1')
   if (rs.rows.length === 0) throw new Error('no profile stored')
-  const current = profileSchema.parse(JSON.parse(String(rs.rows[0].json)))
-  const updated = profileSchema.parse({
-    ...current,
-    screening: { ...current.screening, ...patch },
-  })
+  const current = profileSchema.parse(JSON.parse(String(rs.rows[0].json))) as Profile
+  const updated = profileSchema.parse(patch(current)) as Profile
   await db.execute({
     sql: "UPDATE profile SET json=?, updated_at=datetime('now') WHERE id=1",
     args: [JSON.stringify(updated)],
   })
   return updated
 }
+
+export const updateScreening = (db: Client, patch: Partial<Profile['screening']>): Promise<Profile> =>
+  patchProfile(db, (current) => ({ ...current, screening: { ...current.screening, ...patch } }))
+
+export const updateVoice = (
+  db: Client,
+  patch: { voiceSample?: string; voiceNotes?: string },
+): Promise<Profile> => patchProfile(db, (current) => ({ ...current, ...patch }))
 
 export function validateConfigText(text: string): string | null {
   let parsed: unknown

@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getDb, getConfig, configPath } from '../../lib/db'
-import { updateScreening, validateConfigText } from '../../lib/settings'
+import { updateScreening, updateVoice, validateConfigText } from '../../lib/settings'
 
 export async function saveScreening(form: FormData) {
   const lanes = getConfig().lanes
@@ -23,6 +23,16 @@ export async function saveScreening(form: FormData) {
     workAuthorization: text('workAuthorization'),
     salaryExpectationsByLane: Object.keys(salaryExpectationsByLane).length ? salaryExpectationsByLane : undefined,
   })
+  revalidatePath('/settings')
+  redirect('/settings?saved=1')
+}
+
+export async function saveVoice(form: FormData) {
+  const text = (name: string) => {
+    const v = String(form.get(name) ?? '').trim()
+    return v === '' ? undefined : v
+  }
+  await updateVoice(await getDb(), { voiceSample: text('voiceSample'), voiceNotes: text('voiceNotes') })
   revalidatePath('/settings')
   redirect('/settings?saved=1')
 }

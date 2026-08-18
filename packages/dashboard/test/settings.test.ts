@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { openDb } from '@jobhunter/core'
 import { getProfile } from '@jobhunter/hunter'
-import { updateScreening, validateConfigText } from '../lib/settings.js'
+import { updateScreening, updateVoice, validateConfigText } from '../lib/settings.js'
 
 const tmpDb = () => openDb('file:' + join(mkdtempSync(join(tmpdir(), 'jh-')), 't.db'))
 
@@ -58,5 +58,35 @@ describe('validateConfigText', () => {
 
   it('rejects a config failing the schema', () => {
     expect(validateConfigText(JSON.stringify({ lanes: [] }))).toBeTruthy()
+  })
+})
+
+describe('updateVoice', () => {
+  it('stores a writing sample and notes without touching the rest of the profile', async () => {
+    const db = await tmpDb()
+    await seedProfile(db)
+    const updated = await updateVoice(db, {
+      voiceSample: 'We shipped the offline sync in a week.',
+      voiceNotes: 'no throat clearing',
+    })
+    expect(updated.voiceSample).toBe('We shipped the offline sync in a week.')
+    expect(updated.voiceNotes).toBe('no throat clearing')
+    expect(updated.screening.noticePeriod).toBe('30 days')
+    expect(updated.skills).toEqual(['Flutter'])
+    const roundTrip = await getProfile(db)
+    expect(roundTrip?.voiceSample).toBe('We shipped the offline sync in a week.')
+  })
+
+  it('clears the sample when handed undefined', async () => {
+    const db = await tmpDb()
+    await seedProfile(db)
+    await updateVoice(db, { voiceSample: 'first pass' })
+    const cleared = await updateVoice(db, { voiceSample: undefined })
+    expect(cleared.voiceSample).toBeUndefined()
+  })
+
+  it('throws when no profile is stored', async () => {
+    const db = await tmpDb()
+    await expect(updateVoice(db, { voiceSample: 'x' })).rejects.toThrow('no profile stored')
   })
 })
