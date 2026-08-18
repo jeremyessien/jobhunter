@@ -1,26 +1,25 @@
 import { join, resolve } from 'node:path'
 import type { Client } from '@libsql/client'
-import { loadConfig, openDb, type Config } from '@jobhunter/core'
+import { openDb, loadConfigFromDb, type Config } from '@jobhunter/core'
 
-export const repoRoot = process.env.JOBHUNTER_ROOT ?? resolve(process.cwd(), '..', '..')
-export const configPath = join(repoRoot, 'jobhunter.config.json')
-
-export function getConfig(): Config {
-  return loadConfig(configPath)
-}
+// hosted deployments set JOBHUNTER_DB_URL; local runs fall back to the repo database
+const defaultDbUrl = () =>
+  'file:' + join(process.env.JOBHUNTER_ROOT ?? resolve(process.cwd(), '..', '..'), 'jobhunter.db')
 
 let client: Promise<Client> | null = null
 
 export function getDb(): Promise<Client> {
   if (!client) {
-    const config = getConfig()
-    const url = config.dbUrl.startsWith('file:')
-      ? 'file:' + resolve(repoRoot, config.dbUrl.slice(5))
-      : config.dbUrl
-    client = openDb(url, config.dbAuthToken).catch((e) => {
-      client = null
-      throw e
-    })
+    client = openDb(process.env.JOBHUNTER_DB_URL ?? defaultDbUrl(), process.env.JOBHUNTER_DB_AUTH_TOKEN).catch(
+      (e) => {
+        client = null
+        throw e
+      },
+    )
   }
   return client
+}
+
+export async function getConfig(): Promise<Config> {
+  return loadConfigFromDb(await getDb())
 }

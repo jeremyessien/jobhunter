@@ -1,6 +1,5 @@
-import { getDb, getConfig, configPath } from '../../lib/db'
+import { getDb, getConfig } from '../../lib/db'
 import { getProfile } from '@jobhunter/hunter'
-import { readFileSync } from 'node:fs'
 import { saveScreening, saveVoice, saveConfig } from './actions'
 import { Nav } from '../nav'
 
@@ -14,8 +13,8 @@ export default async function SettingsPage({
   const { saved, error } = await searchParams
   const db = await getDb()
   const profile = await getProfile(db)
-  const config = getConfig()
-  const configText = readFileSync(configPath, 'utf8')
+  const config = await getConfig()
+  const configText = JSON.stringify(config, null, 2)
   const screening = profile?.screening ?? {}
   return (
     <>

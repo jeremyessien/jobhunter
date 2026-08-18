@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import type { Client } from '@libsql/client'
 import { z } from 'zod'
 
 const laneSchema = z.object({
@@ -48,4 +49,28 @@ export type Lane = z.infer<typeof laneSchema>
 
 export function loadConfig(path = 'jobhunter.config.json'): Config {
   return configSchema.parse(JSON.parse(readFileSync(path, 'utf8')))
+}
+
+export async function loadConfigFromDb(db: Client): Promise<Config> {
+  const rs = await db.execute('SELECT json FROM config WHERE id=1')
+  if (rs.rows.length === 0) {
+    throw new Error('no config stored: run `jobhunter seed-config` to load jobhunter.config.json into the database')
+  }
+  return configSchema.parse(JSON.parse(String(rs.rows[0].json)))
+}
+
+export async function saveConfigToDb(db: Client, config: Config): Promise<void> {
+  await db.execute({
+    sql: `INSERT INTO config(id, json, updated_at) VALUES (1, ?, datetime('now'))
+          ON CONFLICT(id) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at`,
+    args: [JSON.stringify(config)],
+  })
+}
+
+export async function seedConfigFromFile(db: Client, path = 'jobhunter.config.json'): Promise<Config> {
+  const rs = await db.execute('SELECT json FROM config WHERE id=1')
+  if (rs.rows.length > 0) return configSchema.parse(JSON.parse(String(rs.rows[0].json)))
+  const config = loadConfig(path)
+  await saveConfigToDb(db, config)
+  return config
 }

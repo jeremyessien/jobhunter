@@ -1,4 +1,4 @@
-import { loadConfig, openDb, invokeClaude, makeThrottledFetch } from '@jobhunter/core'
+import { loadConfig, openDb, seedConfigFromFile, loadConfigFromDb, saveConfigToDb, invokeClaude, makeThrottledFetch } from '@jobhunter/core'
 import { hunt } from './hunt'
 import { greenhouseAdapter } from './sources/greenhouse'
 import { remotiveAdapter } from './sources/remotive'
@@ -12,8 +12,15 @@ import { runDrafter } from './pipeline/drafter'
 
 const [command, arg] = process.argv.slice(2)
 
-const config = loadConfig()
-const db = await openDb(config.dbUrl, config.dbAuthToken)
+// the DB connection itself lives in config, so the file bootstraps the connection
+// and the database is the source of truth for everything after that
+const bootstrap = loadConfig()
+const db = await openDb(
+  process.env.JOBHUNTER_DB_URL ?? bootstrap.dbUrl,
+  process.env.JOBHUNTER_DB_AUTH_TOKEN ?? bootstrap.dbAuthToken,
+)
+await seedConfigFromFile(db)
+const config = await loadConfigFromDb(db)
 
 switch (command) {
   case 'hunt': {
@@ -42,6 +49,11 @@ switch (command) {
     console.log(`seeded ${await seedCompanies(db, arg)} companies`)
     break
   }
+  case 'seed-config': {
+    await saveConfigToDb(db, loadConfig(arg ?? 'jobhunter.config.json'))
+    console.log('config stored in the database')
+    break
+  }
   case 'queue': {
     for (const line of await listQueue(db)) console.log(line)
     break
@@ -59,5 +71,5 @@ switch (command) {
     break
   }
   default:
-    console.log('usage: jobhunter <hunt|parse-resume|seed-companies|queue|draft|apply>')
+    console.log('usage: jobhunter <hunt|parse-resume|seed-companies|seed-config|queue|draft|apply>')
 }

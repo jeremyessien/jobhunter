@@ -4,8 +4,8 @@ import { Nav } from '../nav'
 
 export const dynamic = 'force-dynamic'
 
-export default function HowPage() {
-  const bar = getConfig().queueThreshold
+export default async function HowPage() {
+  const bar = (await getConfig()).queueThreshold
   return (
     <>
       <Nav active="how" />

@@ -64,7 +64,7 @@ export default async function QueuePage({
   const { approved } = await searchParams
   const db = await getDb()
   const jobs = await queueJobs(db, new Date().toISOString())
-  const bar = getConfig().queueThreshold
+  const bar = (await getConfig()).queueThreshold
   const outlook = jobs.length === 0 ? await queueOutlook(db) : null
   const ready = jobs.filter((j) => j.ready)
   const exceptions = jobs.filter((j) => !j.ready)
