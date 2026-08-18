@@ -2,6 +2,7 @@ import { getDb, getConfig } from '../../lib/db'
 import { getProfile } from '@jobhunter/hunter'
 import { saveScreening, saveVoice, saveConfig } from './actions'
 import { Nav } from '../nav'
+import { requireSession } from '../../lib/session'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +11,7 @@ export default async function SettingsPage({
 }: {
   searchParams: Promise<{ saved?: string; error?: string }>
 }) {
+  await requireSession()
   const { saved, error } = await searchParams
   const db = await getDb()
   const profile = await getProfile(db)

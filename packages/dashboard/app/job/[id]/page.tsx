@@ -4,6 +4,7 @@ import { getJob } from '../../../lib/data'
 import { approve, skip, snooze, submit, save } from './actions'
 import { Nav } from '../../nav'
 import { timeAgo } from '../../format'
+import { requireSession } from '../../../lib/session'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +23,7 @@ export default async function JobPage({
   params: Promise<{ id: string }>
   searchParams: Promise<{ warnings?: string }>
 }) {
+  await requireSession()
   const { id } = await params
   const { warnings: warningsParam } = await searchParams
   const db = await getDb()

@@ -5,6 +5,7 @@ import { queueJobs, queueOutlook, type QueueItem } from '../lib/data'
 import { Nav } from './nav'
 import { timeAgo } from './format'
 import { approveReady } from './actions'
+import { requireSession } from '../lib/session'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,6 +62,7 @@ export default async function QueuePage({
 }: {
   searchParams: Promise<{ approved?: string }>
 }) {
+  await requireSession()
   const { approved } = await searchParams
   const db = await getDb()
   const jobs = await queueJobs(db, new Date().toISOString())

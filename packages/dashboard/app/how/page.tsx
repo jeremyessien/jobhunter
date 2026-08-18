@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { getConfig } from '../../lib/db'
 import { Nav } from '../nav'
+import { requireSession } from '../../lib/session'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HowPage() {
+  await requireSession()
   const bar = (await getConfig()).queueThreshold
   return (
     <>
