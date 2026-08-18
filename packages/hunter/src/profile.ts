@@ -19,6 +19,8 @@ export const profileSchema = z.object({
     }),
   ),
   education: z.array(z.object({ school: z.string(), credential: z.string() })).default([]),
+  voiceSample: z.string().optional(),
+  voiceNotes: z.string().optional(),
   screening: z
     .object({
       noticePeriod: z.string().optional(),
@@ -39,20 +41,30 @@ education (array of {school, credential}), screening ({noticePeriod?, salaryExpe
 Copy achievement bullets faithfully - do not embellish, round numbers, or invent anything.
 Reply with ONLY the JSON object.`
 
+const keepCandidateOwned = (existing: Profile, parsed: Profile): Profile => ({
+  ...parsed,
+  voiceSample: existing.voiceSample ?? parsed.voiceSample,
+  voiceNotes: existing.voiceNotes ?? parsed.voiceNotes,
+  screening: { ...parsed.screening, ...existing.screening },
+})
+
 export async function parseResume(db: Client, pdfPath: string, config: Config, invoke: InvokeClaude): Promise<Profile> {
-  const profile = await invoke({
+  const parsed = (await invoke({
     prompt: PARSE_PROMPT(pdfPath),
     model: 'sonnet',
     schema: profileSchema,
     claudeBin: config.claudeBin,
     allowedTools: ['Read'],
-  })
+  })) as Profile
+  // parse-resume is also the repair path, so an unreadable stored profile must not block it
+  const existing = await getProfile(db).catch(() => null)
+  const profile = existing ? keepCandidateOwned(existing, parsed) : parsed
   await db.execute({
     sql: `INSERT INTO profile(id, json, updated_at) VALUES (1, ?, datetime('now'))
           ON CONFLICT(id) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at`,
     args: [JSON.stringify(profile)],
   })
-  return profile as Profile
+  return profile
 }
 
 export async function getProfile(db: Client): Promise<Profile | null> {
