@@ -4,7 +4,7 @@ import type { Config, InvokeClaude } from '@jobhunter/core'
 import type { Profile } from '../profile'
 
 export const scoreSchema = z.object({
-  score: z.number().int().min(1).max(10),
+  score: z.number().int().min(0).max(10),
   matched_strengths: z.array(z.object({ claim: z.string(), evidence: z.string() })),
   gaps: z.array(z.string()),
   verdict: z.string(),
@@ -15,7 +15,7 @@ const RUBRIC = `Score how well this candidate fits this job, 1-10:
 7-8: meets all must-haves; at most minor stretch on nice-to-haves.
 5-6: meets most must-haves but has one real gap (a required technology, domain, or years-of-experience shortfall).
 3-4: multiple must-have gaps.
-1-2: wrong role, stack, or seniority entirely.
+0-2: wrong role, stack, or seniority entirely.
 Rules: every entry in matched_strengths needs "evidence" quoting or closely paraphrasing the profile - no unsupported claims. List concrete gaps honestly. Judge only against what the job text actually requires.`
 
 const judgePrompt = (profile: Profile, title: string, company: string, description: string) =>

@@ -3,7 +3,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { openDb, configSchema, type InvokeClaude } from '@jobhunter/core'
-import { runJudge } from '../src/pipeline/judge.js'
+import { runJudge, scoreSchema } from '../src/pipeline/judge.js'
 import type { Profile } from '../src/profile.js'
 
 const NOW = '2026-08-11T09:00:00Z'
@@ -81,5 +81,20 @@ describe('runJudge', () => {
     const rs = await db.execute("SELECT status, score_json FROM jobs WHERE external_key='a:1'")
     expect(rs.rows[0].status).toBe('score_failed')
     expect(rs.rows[0].score_json as string).toContain('quota')
+  })
+})
+
+describe('scoreSchema bounds', () => {
+  it('accepts 0 for a job the judge rates as no fit at all', () => {
+    const parsed = scoreSchema.parse({ score: 0, matched_strengths: [], gaps: ['wrong stack'], verdict: 'no' })
+    expect(parsed.score).toBe(0)
+  })
+
+  it('still rejects a score above 10', () => {
+    expect(() => scoreSchema.parse({ score: 11, matched_strengths: [], gaps: [], verdict: 'x' })).toThrow()
+  })
+
+  it('still rejects a negative score', () => {
+    expect(() => scoreSchema.parse({ score: -1, matched_strengths: [], gaps: [], verdict: 'x' })).toThrow()
   })
 })
