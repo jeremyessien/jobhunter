@@ -2,6 +2,9 @@ import { loadConfig, openDb, invokeClaude, makeThrottledFetch } from '@jobhunter
 import { hunt } from './hunt'
 import { greenhouseAdapter } from './sources/greenhouse'
 import { remotiveAdapter } from './sources/remotive'
+import { arbeitnowAdapter } from './sources/arbeitnow'
+import { remoteokAdapter } from './sources/remoteok'
+import { jobicyAdapter } from './sources/jobicy'
 import { parseResume, getProfile } from './profile'
 import { seedCompanies } from './seed'
 import { listQueue } from './queue'
@@ -17,7 +20,7 @@ switch (command) {
     const result = await hunt({
       db,
       config,
-      adapters: [greenhouseAdapter, remotiveAdapter],
+      adapters: [greenhouseAdapter, remotiveAdapter, arbeitnowAdapter, remoteokAdapter, jobicyAdapter],
       invoke: invokeClaude,
       fetchJson: makeThrottledFetch(),
       now: new Date().toISOString(),
