@@ -25,6 +25,22 @@ export const configSchema = z.object({
   visaPatterns: z
     .array(z.string())
     .default(['visa sponsorship', 'relocation (support|assistance|package)', 'work permit assistance', 'sponsorship (is )?available']),
+  visaFriendlyLocations: z
+    .array(z.string())
+    .default([
+      'germany', 'netherlands', 'ireland', 'portugal', 'spain', 'poland', 'sweden', 'denmark',
+      'norway', 'finland', 'austria', 'belgium', 'switzerland', 'luxembourg', 'estonia',
+      'czech', 'canada', 'united kingdom', 'united arab emirates', 'dubai', 'abu dhabi',
+      'berlin', 'munich', 'münchen', 'hamburg', 'stuttgart', 'amsterdam', 'dublin',
+      'lisbon', 'barcelona', 'madrid', 'warsaw', 'stockholm', 'copenhagen', 'vienna',
+      'zurich', 'toronto', 'vancouver', 'london',
+    ]),
+  excludeTitlePatterns: z
+    .array(z.string())
+    .default([
+      'junior', 'intern(ship)?\\b', 'graduate', 'trainee', 'apprentice', 'werkstudent',
+      'working student', 'entry[- ]level', 'praktikum', 'praktikant',
+    ]),
 })
 
 export type Config = z.infer<typeof configSchema>

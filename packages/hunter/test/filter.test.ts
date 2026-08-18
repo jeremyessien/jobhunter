@@ -66,3 +66,61 @@ describe('runFilter', () => {
     expect(rs.rows[0].lane).toBe('remote-mobile')
   })
 })
+
+describe('loosened matching', () => {
+  const open = configSchema.parse({
+    lanes: [
+      { id: 'remote-mobile', titlePatterns: ['flutter', 'mobile'], seniorityPatterns: [], rule: 'remote' },
+      { id: 'visa-anywhere', titlePatterns: ['flutter', 'mobile'], seniorityPatterns: [], rule: 'visa' },
+    ],
+  })
+
+  it('accepts a title with no seniority word when the lane asks for none', () => {
+    expect(matchLane(job({ title: 'Flutter Developer' }), open)).toBe('remote-mobile')
+  })
+
+  it('still rejects junior and intern titles', () => {
+    for (const title of [
+      'Junior Flutter Developer',
+      'Flutter Engineer Intern',
+      'Werkstudent Mobile Development (m/w/d)',
+      'Graduate Mobile Engineer',
+    ]) {
+      expect(matchLane(job({ title }), open)).toBeNull()
+    }
+  })
+
+  it('matches a partial title like "Software Engineer III Mobile"', () => {
+    expect(matchLane(job({ title: 'Software Engineer III Mobile' }), open)).toBe('remote-mobile')
+  })
+
+  it('routes an onsite German role to visa-anywhere on location alone', () => {
+    const j = job({
+      title: 'Mobile Engineer - Flutter',
+      location: 'Berlin, Berlin, Germany',
+      remote: 0,
+      description: 'Join our team in Berlin.',
+    })
+    expect(matchLane(j, open)).toBe('visa-anywhere')
+  })
+
+  it('still honours an explicit sponsorship mention outside the country list', () => {
+    const j = job({
+      title: 'Flutter Engineer',
+      location: 'Tokyo, Japan',
+      remote: 0,
+      description: 'We offer visa sponsorship.',
+    })
+    expect(matchLane(j, open)).toBe('visa-anywhere')
+  })
+
+  it('does not route an onsite role in a non-sponsoring location', () => {
+    const j = job({
+      title: 'Flutter Engineer',
+      location: 'Pittsburgh, PA',
+      remote: 0,
+      description: 'Onsite only.',
+    })
+    expect(matchLane(j, open)).toBeNull()
+  })
+})
